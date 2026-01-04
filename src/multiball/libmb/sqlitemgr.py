@@ -15,14 +15,18 @@ class SQLiteManager:
     def insert_data(self, table_name: str, insert_data: dict) -> bool:
         insert_result = False
         try:
-            # self.cursor.execute(f"""
-            #     INSERT INTO {table_name} 
-            #         () 
-            #     VALUES 
-            #         (?, ?, ?, ?, ?, ?, ?, ?)
-            #     """, 
-            #     (play_id, game_pk, game_date, pitcher_id, batter_id, end_speed, x_pos, z_pos)
-            # )
+            columns = ', '.join(insert_data.keys())
+            placeholders = ', '.join(['?'] * len(insert_data))
+            values = tuple(insert_data.values())
+            
+            self.cursor.execute(f"""
+                INSERT INTO {table_name} 
+                    ({columns}) 
+                VALUES 
+                    ({placeholders})
+                """, 
+                values
+            )
             self.conn.commit()
             insert_result = True
         except sqlite3.Error as e:
