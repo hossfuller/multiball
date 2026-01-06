@@ -11,6 +11,7 @@ from .libmb import cmdparser
 from .libmb import configurator
 from .libmb import constants
 from .libmb import dbconnector
+from .libmb import func_database
 from .libmb import logger
 from .libmb import sqlitemgr
 
@@ -21,6 +22,7 @@ __all__ = [
     'configurator',
     'constants',
     'dbconnector',
+    'func_database',
     'logger',
     'sqlitemgr',
 ]

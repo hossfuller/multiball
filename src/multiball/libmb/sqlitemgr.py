@@ -11,20 +11,19 @@ class SQLiteManager:
         self.cursor.execute(create_statement)
         self.conn.commit()
 
-    # def insert_data(self, play_id: str, game_pk: int, game_date: str, pitcher_id: int, batter_id: int, end_speed: float, x_pos: float, z_pos: float) -> bool:
     def insert_data(self, table_name: str, insert_data: dict) -> bool:
         insert_result = False
         try:
             columns = ', '.join(insert_data.keys())
             placeholders = ', '.join(['?'] * len(insert_data))
             values = tuple(insert_data.values())
-            
+
             self.cursor.execute(f"""
-                INSERT INTO {table_name} 
-                    ({columns}) 
-                VALUES 
+                INSERT INTO {table_name}
+                    ({columns})
+                VALUES
                     ({placeholders})
-                """, 
+                """,
                 values
             )
             self.conn.commit()
@@ -32,7 +31,7 @@ class SQLiteManager:
         except sqlite3.Error as e:
             print(f"An error occurred: {e}")
         return insert_result
-    
+
     def query_data(self, query: str, args: list) -> list:
         self.cursor.execute(query, args)
         records = self.cursor.fetchall()
@@ -42,10 +41,10 @@ class SQLiteManager:
         self.cursor.execute(f"SELECT * FROM {table_name}")
         records = self.cursor.fetchall()
         return records
-    
+
     def update_data(self, query: str,  args: list) -> list:
         self.cursor.execute(query, args)
-        self.conn.commit() 
+        self.conn.commit()
         return self.cursor.rowcount
 
     def close_connection(self):

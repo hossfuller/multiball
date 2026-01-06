@@ -76,17 +76,11 @@ The `config/settings.ini` file has a section where you specify the Bluesky accou
 
 ## TO-DO
 
-- [x] Move `libhbp` to the main `src/hbp` directory.
-- [x] Break the `downloader.py` script into `dbpopulator.py` and `downloader.py` scripts.
-- [x] New `downloader.py` script should update the database when it downloads a video.
-- [ ] How do I pass a keyboard interrupt through a `.bat`/`.sh` script to the main python executable?
-- [ ] Make `SQLiteManager` receive a `create table` query so I don't have to make edits in the class itself.
-- [ ] Store the `CREATE TABLE` in the constants.py file.
-- [ ] Put a normalized batter's silhouette on plots to add more context.
-
 
 <!-- --------------------------------------------------------------------------- -->
 
+
+<div id='inspirations' />
 
 ## Inspirations
 
@@ -94,3 +88,97 @@ The `config/settings.ini` file has a section where you specify the Bluesky accou
 - [dylandru/BSav_Scraper_Vid](https://github.com/dylandru/BSav_Scraper_Vid)
 - [Smerity/all_examples_from_bluesky_atproto_python_api.py.txt](https://gist.github.com/Smerity/f896e0a9d27c725b2bc03cd85e105b31)
 
+
+
+<!-- --------------------------------------------------------------------------- -->
+
+
+<div id='run_multiball_script_usage_examples' />
+
+## `run_multiball` Script Usage Examples
+
+The `run_multiball.sh` and `run_multiball.bat` scripts have been updated to use specific flags for each module.
+
+### Basic Usage
+
+#### Shell Script (Linux/macOS)
+
+```bash
+# Default behavior (dbpop)
+./run_multiball.sh --help
+./run_multiball.sh --test-mode --verbose
+
+# Explicit module selection
+./run_multiball.sh --db --help
+./run_multiball.sh --dl --input-file data.csv
+./run_multiball.sh --pl --output-dir ./plots
+./run_multiball.sh --sk --message "Hello World"
+```
+
+#### Batch Script (Windows)
+
+```batch
+:: Default behavior (dbpop)
+run_multiball.bat --help
+run_multiball.bat --test-mode --verbose
+
+:: Explicit module selection
+run_multiball.bat --db --help
+run_multiball.bat --dl --input-file data.csv
+run_multiball.bat --pl --output-dir ./plots
+run_multiball.bat --sk --message "Hello World"
+```
+
+### Available Flags
+
+- `--db` - Database population module (default if no flag specified)
+- `--dl` - Data downloader module
+- `--pl` - Plotting/visualization module
+- `--sk` - Social media posting module
+
+### Argument Passing
+
+All arguments after the module flag are passed directly to the selected module. For example:
+
+```bash
+# These are equivalent:
+./run_multiball.sh --dl --input-file data.csv --output-dir ./output --verbose
+python3 -m src.multiball.downloader --input-file data.csv --output-dir ./output --verbose
+```
+
+### Help System
+
+```bash
+# Show script help
+./run_multiball.sh --help
+
+# Show help for a specific module
+./run_multiball.sh --dl --help
+./run_multiball.sh --pl --help
+```
+
+### Examples with Common Arguments
+
+```bash
+# Database operations (default, so --db is optional)
+./run_multiball.sh --test-mode --verbose --dry-run
+./run_multiball.sh --db --test-mode --verbose --dry-run
+
+# Downloader with file specifications
+./run_multiball.sh --dl --input-file input.csv --output-file output.json --max-items 100
+
+# Plotter with custom settings
+./run_multiball.sh --pl --input-data data.json --output-dir ./plots --plot-style fancy
+
+# Skeeter with message
+./run_multiball.sh --sk --message "Check out this new plot!" --image-file plot.png
+```
+
+### Notes
+
+- The scripts automatically set the `PYTHONPATH` to include the current directory
+- Both scripts support the same functionality and argument parsing
+- The default module is `dbpop` if no flag is provided
+- All module-specific arguments are passed through unchanged
+- Use `--help` to see script usage information
+- Use `--<module> --help` to see module-specific help
