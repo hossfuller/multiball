@@ -18,6 +18,7 @@ from typing import Optional
 from .libmb import basic as bsc
 from .libmb import cmdparser as cmd
 from .libmb import constants as const
+from .libmb import func_baseball as bb
 from .libmb import func_database as fdb
 
 from .libmb.cmdparser import CmdParser
@@ -129,63 +130,61 @@ def main(start_date: Optional[str] = None) -> int:
             if db_create_result:
                 print(f"💾 '{mode_dbfile} has been created.")
 
-
-
-
         ## Now start in on parsing out baseball events based on mode.
+        total_events = 0
+        for xday in range(num_days):
+            print(f'⚾ [{xday+1}/{num_days}] Checking {start_date} for games...', end='')
+            mlb_games = bb.get_mlb_games_for_date(start_date)
+            print(f'found {len(mlb_games)} games that day. ⚾')
 
+            ## "GAME" FOR LOOP
+            ## Loops through all the games for the day.
+            event_count = 0
+            for i, game in enumerate(mlb_games):
+                game_deets = bb.get_mlb_game_deets(game, double_verbose)
+                events = bb.get_mlb_events_from_single_game(mode, game, double_verbose)
 
-#         total_hbp_events = 0
-#         for xday in range(num_days):
-#             print(f'⚾ [{xday+1}/{num_days}] Checking {start_date} for games...', end='')
-#             mlb_games = bb.get_mlb_games_for_date(start_date)
-#             print(f'found {len(mlb_games)} games that day. ⚾')
-
-#             ## "GAME" FOR LOOP
-#             ## Loops through all the games for the day.
-#             hbp_count = 0
-#             for i, game in enumerate(mlb_games):
-#                 game_deets = bb.get_mlb_game_deets(game, double_verbose)
-#                 hbp_events = bb.get_mlb_hit_by_pitch_events_from_single_game(game, double_verbose)
-
-#                 if double_verbose:
-#                     print("@ --------- GAME DEETS --------- ")
-#                     pprint.pprint(game_deets)
+                if double_verbose:
+                    print("@ --------- GAME DEETS --------- ")
+                    pprint.pprint(game_deets)
 #                     print("@ --------- HBP EVENTS --------- ")
-#                     pprint.pprint(hbp_events)
-#                     print("@ ------------ END ------------- ")
-#                     print()
-#                 ## "HBP EVENT" FOR LOOP
-#                 ## Loops through all the HBP events.
-#                 for j, event in enumerate(hbp_events):
-#                     try:
-#                         dbinsert_result = dbmgr.insert_row(game_deets, event)
-#                         hbp_count = hbp_count + 1
+#                     pprint.pprint(events)
+                    print("@ ------------ END ------------- ")
+                    print()
+
+                ## "EVENT" FOR LOOP
+                ## Loops through all the HBP events.
+                for j, event in enumerate(events):
+                    try:
+                        dbinsert_result = fdb.insert_row(mode, game_deets, event)
+                        event_count = event_count + 1
 
 #                         if dbinsert_result:
-#                             print(f"  {hbp_count:02}. 👍 HBP {event['play_id']} added to database.")
+#                             print(f"  {event_count:02}. 👍 HBP {event['play_id']} added to database.")
 #                         else:
-#                             print(f"  {hbp_count:02}. 🦋 HBP {event['play_id']} is already in the database.", end='')
-#                             if dbmgr.has_been_downloaded(event['play_id']):
+#                             print(f"  {event_count:02}. 🦋 HBP {event['play_id']} is already in the database.", end='')
+#                             if fdb.has_been_downloaded(event['play_id']):
 #                                 print(f" (dl)", end='')
-#                             if dbmgr.has_been_analyzed(event['play_id']):
+#                             if fdb.has_been_analyzed(event['play_id']):
 #                                 print(f" (nz)", end='')
-#                             if dbmgr.has_been_skeeted(event['play_id']):
+#                             if fdb.has_been_skeeted(event['play_id']):
 #                                 print(f" (sk)", end='')
 #                             print()
-#                     except KeyboardInterrupt:
-#                         dbmgr.remove_row(event['play_id'])
-#                 time.sleep(sleep_time)
-#             print(f"💥 There were {hbp_count} total HBP events for this day. 💥")
-#             print()
-#             total_hbp_events = total_hbp_events + hbp_count
+                    except KeyboardInterrupt:
+                        # fdb.remove_row(mode, event['play_id'])
+                        print(f"[TEST] You quit on {mode}!")
 
-#             if backward:
-#                 start_date = gen.subtract_one_day_from_date(start_date)
-#             else:
-#                 start_date = gen.add_one_day_to_date(start_date)
+                time.sleep(sleep_time)
+            print(f"💥 There were {event_count} total {mode} events for this day. 💥")
+            print()
+            total_events = total_events + event_count
 
-#         print(f"⚾💥 Captured {total_hbp_events} during this run.")
+            if backward:
+                start_date = bsc.subtract_one_day_from_date(start_date)
+            else:
+                start_date = bsc.add_one_day_to_date(start_date)
+
+        print(f"⚾💥 Captured {total_events} during this run.")
 
         print()
         end_time = time.time()
