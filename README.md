@@ -76,6 +76,9 @@ The `config/settings.ini` file has a section where you specify the Bluesky accou
 
 ## TO-DO
 
+- [ ] Figure out how to do cursed plays for db population (`get_mlb_events_from_single_game()`)
+- [ ] Figure out how to do triples plays for db population (`get_mlb_events_from_single_game()`)
+
 
 <!-- --------------------------------------------------------------------------- -->
 

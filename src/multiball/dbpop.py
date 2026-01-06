@@ -123,7 +123,7 @@ def main(start_date: Optional[str] = None) -> int:
         db_create_result = False
         db_definition = dbmgr.get_table_definition(mode, verbose)
         if os.path.exists(bsc.sanitize_path(db_definition["filename"])):
-            print(f"💾 '{mode}' database file: {db_definition["filename"]}")
+            print(f"💾 '{mode}' database file:  {db_definition["filename"]}")
         else:
             print(f"‼️ No database file exists for '{mode}'. Creating '{db_definition["filename"]}'...")
             db_create_result = dbmgr.create_database(mode, verbose)
@@ -136,9 +136,10 @@ def main(start_date: Optional[str] = None) -> int:
             db_create_result = True
 
         if db_create_result:
-            print(f"💾 '{db_definition["tablename"]}' has been created.")
+            print(f"💾 '{mode}' database table: {db_definition["tablename"]}")
         else:
             raise Exception(f"❌ Database file/table is not in a condition for writing!")
+        print()
 
         ## Now start in on parsing out baseball events based on mode.
         total_events = 0
@@ -157,8 +158,8 @@ def main(start_date: Optional[str] = None) -> int:
                 if double_verbose:
                     print("@ --------- GAME DEETS --------- ")
                     pprint.pprint(game_deets)
-#                     print("@ --------- HBP EVENTS --------- ")
-#                     pprint.pprint(events)
+                    print("@ ----------- EVENTS ----------- ")
+                    pprint.pprint(events)
                     print("@ ------------ END ------------- ")
                     print()
 
@@ -169,19 +170,19 @@ def main(start_date: Optional[str] = None) -> int:
                         dbinsert_result = dbmgr.insert_row(mode, game_deets, event)
                         event_count = event_count + 1
 
-#                         if dbinsert_result:
-#                             print(f"  {event_count:02}. 👍 HBP {event['play_id']} added to database.")
-#                         else:
-#                             print(f"  {event_count:02}. 🦋 HBP {event['play_id']} is already in the database.", end='')
-#                             if dbmgr.has_been_downloaded(event['play_id']):
-#                                 print(f" (dl)", end='')
-#                             if dbmgr.has_been_analyzed(event['play_id']):
-#                                 print(f" (nz)", end='')
-#                             if dbmgr.has_been_skeeted(event['play_id']):
-#                                 print(f" (sk)", end='')
-#                             print()
+                        if dbinsert_result:
+                            print(f"  {event_count:02}. 👍 {mode.upper()} {event['play_id']} added to database.")
+                        else:
+                            print(f"  {event_count:02}. 🦋 {mode.upper()} {event['play_id']} is already in the database.", end='')
+                            if dbmgr.has_been_downloaded(mode, event['play_id'], verbose):
+                                print(f" (dl)", end='')
+                            if dbmgr.has_been_analyzed(mode, event['play_id'], verbose):
+                                print(f" (nz)", end='')
+                            if dbmgr.has_been_skeeted(mode, event['play_id'], verbose):
+                                print(f" (sk)", end='')
+                            print()
                     except KeyboardInterrupt:
-                        # dbmgr.remove_row(mode, event['play_id'])
+                        dbmgr.delete_row(mode, event['play_id'])
                         print(f"[TEST] You quit on {mode}!")
 
                 time.sleep(sleep_time)

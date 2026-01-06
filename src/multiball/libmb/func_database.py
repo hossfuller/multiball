@@ -43,7 +43,7 @@ config = ConfigReader(bsc.verify_file_path(bsc.sanitize_path(const.DEFAULT_CONFI
 #         return player_data
 
 #     with SQLiteManager(dbfile) as db:
-#         player_data = db.query_hbpdata(
+#         player_data = db.query_data(
 #             f"SELECT * FROM {dbtable} WHERE {player_type}_id = ?",
 #             [player_id]
 #         )
@@ -53,7 +53,7 @@ config = ConfigReader(bsc.verify_file_path(bsc.sanitize_path(const.DEFAULT_CONFI
 # def get_earliest_date(dbfile: str = db_file_path, dbtable: str = db_table) -> str:
 #     select_data = None
 #     with SQLiteManager(dbfile) as db:
-#         select_data = db.query_hbpdata(
+#         select_data = db.query_data(
 #             f"SELECT MIN(game_date) FROM {dbtable}",
 #             []
 #         )
@@ -75,7 +75,7 @@ def get_event_play_data(mode: str, play_id: str, verbose_bool: Optional[bool] = 
 # def get_latest_date_that_hasnt_been_downloaded() -> str:
 #     select_data = None
 #     with SQLiteManager(db_file_path) as db:
-#         select_data = db.query_hbpdata(
+#         select_data = db.query_data(
 #             f"SELECT MAX(game_date) FROM {db_table} WHERE downloaded = 0",
 #             []
 #         )
@@ -86,7 +86,7 @@ def get_event_play_data(mode: str, play_id: str, verbose_bool: Optional[bool] = 
 #     season_start = f"{season}-01-01"
 #     season_end = f"{season}-12-31"
 #     with SQLiteManager(dbfile) as db:
-#         season_data = db.query_hbpdata(
+#         season_data = db.query_data(
 #             f"SELECT * FROM {dbtable} WHERE game_date BETWEEN ? AND ?",
 #             [season_start, season_end]
 #         )
@@ -100,65 +100,70 @@ def get_event_play_data(mode: str, play_id: str, verbose_bool: Optional[bool] = 
 #     return season
 
 
-# def has_been_downloaded(play_id: str, dbfile: str = db_file_path, dbtable: str = db_table) -> bool:
-#     return has_been_done(play_id, "downloaded", dbfile, dbtable)
+def has_been_downloaded(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> bool:
+    return has_been_done(mode, play_id, "downloaded")
 
 
-# def has_been_analyzed(play_id: str, dbfile: str = db_file_path, dbtable: str = db_table) -> bool:
-#     return has_been_done(play_id, "analyzed", dbfile, dbtable)
+def has_been_analyzed(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> bool:
+    return has_been_done(mode, play_id, "analyzed")
 
 
-# def has_been_skeeted(play_id: str, dbfile: str = db_file_path, dbtable: str = db_table) -> bool:
-#     return has_been_done(play_id, "skeeted", dbfile, dbtable)
+def has_been_skeeted(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> bool:
+    return has_been_done(mode, play_id, "skeeted")
 
 
-# def has_been_done(play_id: str, flag: str, dbfile: str = db_file_path, dbtable: str = db_table) -> bool:
-#     flags       = {'downloaded': 8, 'analyzed': 9, 'skeeted': 10}
-#     flag_index  = flags.get(flag)
-#     flag_status = False
+def has_been_done(mode: str, play_id: str, flag: str, verbose_bool: Optional[bool] = False) -> bool:
+    flag_status = False
 
-#     if flag_status is not None:
-#         with SQLiteManager(dbfile) as db:
-#             select_data = db.query_hbpdata(
-#                 f"SELECT * FROM {dbtable} WHERE play_id = ?",
-#                 [play_id]
-#             )
-#         if len(select_data) == 1 and select_data[0][flag_index] == 1:
-#             flag_status = True
-#     return flag_status
+    ## Validate the flag
+    valid_flags = ['downloaded', 'analyzed', 'skeeted']
+    if flag not in valid_flags:
+        raise ValueError(f"Invalid flag '{flag}'. Must be one of: {valid_flags}")
 
+    table_definition = get_table_definition(mode, verbose_bool)
+    with SQLiteManager(table_definition['filename']) as db:
+        select_data = db.query_data(
+            f"SELECT {flag} FROM {table_definition['tablename']} WHERE play_id = ?",
+            [play_id]
+        )
+        if len(select_data) == 1 and select_data[0][0] == 1:
+            flag_status = True
 
-# def set_download_flag(play_id: str, dbfile: str = db_file_path, dbtable: str = db_table) -> bool:
-#     return set_hbp_flag(play_id, 'downloaded', dbfile, dbtable)
-
-
-# def set_analyzed_flag(play_id: str, dbfile: str = db_file_path, dbtable: str = db_table) -> bool:
-#     return set_hbp_flag(play_id, 'analyzed', dbfile, dbtable)
+    return flag_status
 
 
-# def set_skeeted_flag(play_id: str, dbfile: str = db_file_path, dbtable: str = db_table) -> bool:
-#     return set_hbp_flag(play_id, 'skeeted', dbfile, dbtable)
+def set_download_flag(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> bool:
+    return set_hbp_flag(mode, play_id, 'downloaded', verbose_bool)
 
 
-# def set_hbp_flag(play_id: str, flag: str, dbfile: str = db_file_path, dbtable: str = db_table) -> bool:
-#     flags       = ['downloaded', 'analyzed', 'skeeted']
-#     flag_status = False
+def set_analyzed_flag(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> bool:
+    return set_hbp_flag(mode, play_id, 'analyzed', verbose_bool)
 
-#     if flag not in flags:
-#         return flag_status
 
-#     with SQLiteManager(dbfile) as db:
-#         update_data = db.update_hbpdata_data(
-#             f"UPDATE {dbtable} SET {flag} = 1 WHERE play_id = ?",
-#             [play_id]
-#         )
-#         if update_data == 0:
-#             raise Exception(f"Play ID {play_id} doesn't exist in the database!")
-#         elif update_data == 1:
-#             flag_status = True
-#         else:
-#             raise Exception("More than one entry was updated! THIS SHOULDN'T HAPPEN.")
-#     return flag_status
+def set_skeeted_flag(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> bool:
+    return set_hbp_flag(mode, play_id, 'skeeted', verbose_bool)
+
+
+def set_hbp_flag(mode: str, play_id: str, flag: str, verbose_bool: Optional[bool] = False) -> bool:
+    flags       = ['downloaded', 'analyzed', 'skeeted']
+    flag_status = False
+
+    if flag not in flags:
+        return flag_status
+
+    table_definition = get_table_definition(mode, verbose_bool)
+    with SQLiteManager(table_definition['filename']) as db:
+        update_data = db.update_data(
+            f"UPDATE {table_definition['tablename']} SET {flag} = 1 WHERE play_id = ?",
+            [play_id]
+        )
+        if update_data == 0:
+            raise Exception(f"Play ID {play_id} doesn't exist in the {table_definition['filename']} database!")
+        elif update_data == 1:
+            flag_status = True
+        else:
+            raise Exception(f"More than one entry in {table_definition['tablename']} was updated! THIS SHOULDN'T HAPPEN.")
+    return flag_status
 
 
 ## -------------------------------------------------------------------------- ##
@@ -259,8 +264,10 @@ def insert_row(mode: str, game: list, event: list, verbose_bool: Optional[bool] 
     table_definition = get_table_definition(mode, verbose_bool)
 
     select_data = get_event_play_data(mode, event['play_id'], verbose_bool)
+    pprint.pprint(select_data) ## We need to handle this better, because it's
+                               ## faking out the top level script into thinking
+                               ## something was inserted when it wasn't.
     if len(select_data) == 0:
-
         if mode == "cursed":
             insert_data = {
                 "play_id"   : event['play_id'],
@@ -291,8 +298,7 @@ def insert_row(mode: str, game: list, event: list, verbose_bool: Optional[bool] 
             }
 
         with SQLiteManager(table_definition['filename']) as db:
-            db.insert_data(table_definition['tablename'], insert_data)
-            row_inserted = True
+            row_inserted = db.insert_data(table_definition['tablename'], insert_data)
 
     return inserted
 

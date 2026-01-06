@@ -25,10 +25,15 @@ class SQLiteManager:
                 """,
                 values
             )
+            num_inserted = self.cursor.rowcount
+            print(f"NUM INSERTED: {num_inserted}")
+            if self.cursor.rowcount > 0:
+                insert_result = True
+
             self.conn.commit()
-            insert_result = True
         except sqlite3.Error as e:
             print(f"An error occurred: {e}")
+        print(f"Insert result: {insert_result}")
         return insert_result
 
     def query_data(self, query: str, args: list) -> list:
