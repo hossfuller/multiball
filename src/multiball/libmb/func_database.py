@@ -22,48 +22,49 @@ config = ConfigReader(bsc.verify_file_path(bsc.sanitize_path(const.DEFAULT_CONFI
 ## DATABASE WRAPPER FUNCTIONS
 ## -------------------------------------------------------------------------- ##
 
-# def get_all_batter_data(player_id: int, dbfile: str = db_file_path, dbtable: str = db_table) -> list:
-#     return get_all_player_data(player_id, "batter", dbfile, dbtable)
+def get_all_batter_data(mode: str, player_id: int, verbose_bool: Optional[bool] = False) -> list:
+    return get_all_player_data(mode, player_id, "batter", verbose_bool)
 
 
-# def get_all_pitcher_data(player_id: int, dbfile: str = db_file_path, dbtable: str = db_table) -> list:
-#     return get_all_player_data(player_id, "pitcher", dbfile, dbtable)
+def get_all_pitcher_data(mode: str, player_id: int, verbose_bool: Optional[bool] = False) -> list:
+    return get_all_player_data(mode, player_id, "pitcher", verbose_bool)
 
 
-# def get_all_player_data(
-#     player_id: int,
-#     player_type: str,
-#     dbfile: str = db_file_path,
-#     dbtable: str = db_table
-# ) -> list:
-#     player_data = []
+def get_all_player_data(
+    mode: str, 
+    player_id: int, 
+    player_type: str, 
+    verbose_bool: Optional[bool] = False
+) -> list:
+    player_data = []
+    table_definition = get_table_definition(mode, verbose_bool)
 
-#     player_types = ["batter", "pitcher"]
-#     if player_type not in player_types:
-#         return player_data
+    player_types = ["batter", "pitcher"]
+    if player_type not in player_types:
+        return player_data
 
-#     with SQLiteManager(dbfile) as db:
-#         player_data = db.query_data(
-#             f"SELECT * FROM {dbtable} WHERE {player_type}_id = ?",
-#             [player_id]
-#         )
-#     return player_data
+    with SQLiteManager(table_definition['filename']) as db:
+        player_data = db.query_data(
+            f"SELECT * FROM {table_definition['tablename']} WHERE {player_type}_id = ?",
+            [player_id]
+        )
+    return player_data
 
 
-# def get_earliest_date(dbfile: str = db_file_path, dbtable: str = db_table) -> str:
-#     select_data = None
-#     with SQLiteManager(dbfile) as db:
-#         select_data = db.query_data(
-#             f"SELECT MIN(game_date) FROM {dbtable}",
-#             []
-#         )
-#     return select_data[0][0]
+def get_earliest_date(mode: str, verbose_bool: Optional[bool] = False) -> str:
+    select_data = None
+    table_definition = get_table_definition(mode, verbose_bool)
+    with SQLiteManager(table_definition['filename']) as db:
+        select_data = db.query_data(
+            f"SELECT MIN(game_date) FROM {table_definition['tablename']}",
+            []
+        )
+    return select_data[0][0]
 
 
 def get_event_play_data(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> list:
     select_data = []
     table_definition = get_table_definition(mode, verbose_bool)
-
     with SQLiteManager(table_definition['filename']) as db:
         select_data = db.query_data(
             f"SELECT * FROM {table_definition['tablename']} WHERE play_id = ?",
@@ -72,32 +73,62 @@ def get_event_play_data(mode: str, play_id: str, verbose_bool: Optional[bool] = 
     return select_data
 
 
-# def get_latest_date_that_hasnt_been_downloaded() -> str:
-#     select_data = None
-#     with SQLiteManager(db_file_path) as db:
-#         select_data = db.query_data(
-#             f"SELECT MAX(game_date) FROM {db_table} WHERE downloaded = 0",
-#             []
-#         )
-#     return select_data[0][0]
+def get_latest_date(mode: str, verbose_bool: Optional[bool] = False) -> str:
+    select_data = None
 
-# def get_season_data(season: int, dbfile: str = db_file_path, dbtable: str = db_table) -> list:
-#     season_data = []
-#     season_start = f"{season}-01-01"
-#     season_end = f"{season}-12-31"
-#     with SQLiteManager(dbfile) as db:
-#         season_data = db.query_data(
-#             f"SELECT * FROM {dbtable} WHERE game_date BETWEEN ? AND ?",
-#             [season_start, season_end]
-#         )
-#     return season_data
+    table_definition = get_table_definition(mode, verbose_bool)
+    with SQLiteManager(table_definition['filename']) as db:
+        select_data = db.query_data(
+            f"SELECT MAX(game_date) FROM {table_definition['tablename']}",
+            []
+        )
+
+    return select_data[0][0]
 
 
-# def get_season_year(play_id: str, dbfile: str = db_file_path, dbtable: str = db_table) -> bool:
-#     current_play = get_event_play_data(play_id, db_file_path, db_table)
-#     game_date        = current_play[0][2]
-#     season,month,day = game_date.split('-')
-#     return season
+def get_latest_date_that_hasnt_been_downloaded(mode: str, verbose_bool: Optional[bool] = False) -> str:
+    select_data = None
+    table_definition = get_table_definition(mode, verbose_bool)
+    with SQLiteManager(table_definition['filename']) as db:
+        select_data = db.query_data(
+            f"SELECT MAX(game_date) FROM {table_definition['tablename']} WHERE downloaded = 0",
+            []
+        )
+    return select_data[0][0]
+
+
+def get_season_data(mode: str, season: int, verbose_bool: Optional[bool] = False) -> list:
+    season_data  = []
+    season_start = f"{season}-01-01"
+    season_end   = f"{season}-12-31"
+
+    table_definition = get_table_definition(mode, verbose_bool)
+    with SQLiteManager(table_definition['filename']) as db: 
+        season_data = db.query_data(
+            f"SELECT * FROM {table_definition['tablename']} WHERE game_date BETWEEN ? AND ?",
+            [season_start, season_end]
+        )
+    return season_data
+
+
+def get_season_year(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> str:
+    current_play = get_event_play_data(mode, play_id, verbose_bool)
+    
+    # Search through each column in current_play to find a YYYY-MM-DD date value
+    season = None
+    for column_value in current_play[0]:
+        if column_value and isinstance(column_value, str):
+            # Check if the value looks like a date in YYYY-MM-DD format
+            parts = column_value.split('-')
+            if len(parts) == 3 and len(parts[0]) == 4 and parts[0].isdigit():
+                # Found a valid date, extract the year
+                season = parts[0]
+                break
+    
+    if season is None:
+        raise ValueError(f"No valid date found in play data for play_id: {play_id}")
+    
+    return season
 
 
 def has_been_downloaded(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> bool:
@@ -260,13 +291,10 @@ def create_database(mode: str, verbose_bool: Optional[bool] = False) -> bool:
 
 
 def insert_row(mode: str, game: list, event: list, verbose_bool: Optional[bool] = False) -> bool:
-    inserted = False
+    row_inserted = False
     table_definition = get_table_definition(mode, verbose_bool)
 
     select_data = get_event_play_data(mode, event['play_id'], verbose_bool)
-    pprint.pprint(select_data) ## We need to handle this better, because it's
-                               ## faking out the top level script into thinking
-                               ## something was inserted when it wasn't.
     if len(select_data) == 0:
         if mode == "cursed":
             insert_data = {
@@ -300,7 +328,7 @@ def insert_row(mode: str, game: list, event: list, verbose_bool: Optional[bool] 
         with SQLiteManager(table_definition['filename']) as db:
             row_inserted = db.insert_data(table_definition['tablename'], insert_data)
 
-    return inserted
+    return row_inserted
 
 def delete_row(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> bool:
     deleted = False
