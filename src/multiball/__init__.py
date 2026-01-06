@@ -7,6 +7,7 @@ __description__ = "Multiball Bsky Client - Bluesky bot that posts cursed basebal
 
 # Import key components to make them available at package level
 from .libmb import basic
+from .libmb import cmdparser
 from .libmb import configurator
 from .libmb import constants
 from .libmb import dbconnector
@@ -19,6 +20,7 @@ from .libmb import sqlitemgr
 # Package-level variables
 __all__ = [
     'basic',
+    'cmdparser',
     'configurator',
     'constants',
     'dbconnector',
