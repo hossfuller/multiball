@@ -9,9 +9,14 @@ set PYTHONPATH=%cd%
 :: Default to dbpop if no specific flag is provided
 set target_module=src.multiball.dbpop
 
+:: Initialize arguments for the target module
+set module_args=
+
 :: Parse command line arguments to find module flags
 :parse_args
 if "%1"=="" goto end_parse
+
+:: Check for module flags
 if "%1"=="--db" (
     set target_module=src.multiball.dbpop
     shift
@@ -32,37 +37,13 @@ if "%1"=="--sk" (
     shift
     goto parse_args
 )
-if "%1"=="--help" (
-    echo Usage: %0 [--db^|--dl^|--pl^|--sk] [module_arguments]
-    echo.
-    echo Flags:
-    echo   --db    Run database population module (default)
-    echo   --dl    Run downloader module
-    echo   --pl    Run plotter module
-    echo   --sk    Run skeeter module
-    echo.
-    echo If no flag is provided, --db (dbpop) is used by default.
-    echo All other arguments are passed to the selected module.
-    exit /b 0
-)
-if "%1"=="-h" (
-    echo Usage: %0 [--db^|--dl^|--pl^|--sk] [module_arguments]
-    echo.
-    echo Flags:
-    echo   --db    Run database population module (default)
-    echo   --dl    Run downloader module
-    echo   --pl    Run plotter module
-    echo   --sk    Run skeeter module
-    echo.
-    echo If no flag is provided, --db (dbpop) is used by default.
-    echo All other arguments are passed to the selected module.
-    exit /b 0
-)
+
+:: If it's not a recognized module flag, add it to the arguments for the module
+set module_args=%module_args% %1
 shift
 goto parse_args
 
 :end_parse
 
-:: Run the selected module with remaining arguments
-echo Running: python -m %target_module% %*
-python -m %target_module% %*
+:: Run the selected module with the collected arguments
+python -m %target_module% %module_args%
