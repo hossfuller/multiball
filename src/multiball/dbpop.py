@@ -19,7 +19,7 @@ from .libmb import basic as bsc
 from .libmb import cmdparser as cmd
 from .libmb import constants as const
 from .libmb import func_baseball as bb
-from .libmb import func_database as fdb
+from .libmb import func_database as dbmgr
 
 from .libmb.cmdparser import CmdParser
 from .libmb.configurator import ConfigReader
@@ -94,9 +94,10 @@ if args.get("double_verbose"):
 
 ## Set up logging
 if not args.get("nolog"):
+    prefix_val = config.get("logging_prefixes", "dbpopulator_prefix")
     sys.stdout = PrintLogger(
         config.get("paths", "log_dir"),
-        f"{args.get("mode")}_{config.get("logging_prefixes", "dbpopulator_prefix")}",
+        f"{mode}_{prefix_val}",
     )
 
 
@@ -118,17 +119,26 @@ def main(start_date: Optional[str] = None) -> int:
         start_time = time.time()
 
         ## First check if the database file already exists. If it doesn't,
-        ## create it.
-        data_root = config.get("paths", "bsky_data_dir")
-        mode_root = config.get(mode, "data_root")
-        mode_dbfile = os.path.join(data_root, mode_root, config.get(mode, "db_filename"))
-        if os.path.exists(bsc.sanitize_path(mode_dbfile)):
-            print(f"💾 {mode.capitalize()} database file: {mode_dbfile}")
+        ## create it, then create the table.
+        db_create_result = False
+        db_definition = dbmgr.get_table_definition(mode, verbose)
+        if os.path.exists(bsc.sanitize_path(db_definition["filename"])):
+            print(f"💾 '{mode}' database file: {db_definition["filename"]}")
         else:
-            print(f"‼️ No database file exists for {mode}. Creating '{mode_dbfile}'...")
-            db_create_result = fdb.create_database(mode, verbose)
+            print(f"‼️ No database file exists for '{mode}'. Creating '{db_definition["filename"]}'...")
+            db_create_result = dbmgr.create_database(mode, verbose)
             if db_create_result:
-                print(f"💾 '{mode_dbfile} has been created.")
+                print(f"💾 '{db_definition["filename"]}' has been created.")
+
+        if os.path.getsize(db_definition["filename"]) == 0:
+            db_create_result = dbmgr.create_database(mode, verbose)
+        else:
+            db_create_result = True
+
+        if db_create_result:
+            print(f"💾 '{db_definition["tablename"]}' has been created.")
+        else:
+            raise Exception(f"❌ Database file/table is not in a condition for writing!")
 
         ## Now start in on parsing out baseball events based on mode.
         total_events = 0
@@ -156,22 +166,22 @@ def main(start_date: Optional[str] = None) -> int:
                 ## Loops through all the HBP events.
                 for j, event in enumerate(events):
                     try:
-                        dbinsert_result = fdb.insert_row(mode, game_deets, event)
+                        dbinsert_result = dbmgr.insert_row(mode, game_deets, event)
                         event_count = event_count + 1
 
 #                         if dbinsert_result:
 #                             print(f"  {event_count:02}. 👍 HBP {event['play_id']} added to database.")
 #                         else:
 #                             print(f"  {event_count:02}. 🦋 HBP {event['play_id']} is already in the database.", end='')
-#                             if fdb.has_been_downloaded(event['play_id']):
+#                             if dbmgr.has_been_downloaded(event['play_id']):
 #                                 print(f" (dl)", end='')
-#                             if fdb.has_been_analyzed(event['play_id']):
+#                             if dbmgr.has_been_analyzed(event['play_id']):
 #                                 print(f" (nz)", end='')
-#                             if fdb.has_been_skeeted(event['play_id']):
+#                             if dbmgr.has_been_skeeted(event['play_id']):
 #                                 print(f" (sk)", end='')
 #                             print()
                     except KeyboardInterrupt:
-                        # fdb.remove_row(mode, event['play_id'])
+                        # dbmgr.remove_row(mode, event['play_id'])
                         print(f"[TEST] You quit on {mode}!")
 
                 time.sleep(sleep_time)

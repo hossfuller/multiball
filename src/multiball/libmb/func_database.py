@@ -65,7 +65,7 @@ def get_event_play_data(mode: str, play_id: str, verbose_bool: Optional[bool] = 
     table_definition = get_table_definition(mode, verbose_bool)
 
     with SQLiteManager(table_definition['filename']) as db:
-        select_data = db.query_hbpdata(
+        select_data = db.query_data(
             f"SELECT * FROM {table_definition['tablename']} WHERE play_id = ?",
             [play_id]
         )
@@ -218,25 +218,6 @@ def create_database(mode: str, verbose_bool: Optional[bool] = False) -> bool:
     """
     db_was_created = False
 
-    # # Validate the mode parameter
-    # valid_modes = ["cursed", "hbp", "triples"]
-    # if mode not in valid_modes:
-    #     raise ValueError(f"Invalid mode '{mode}'. Must be one of: {valid_modes}")
-
-    # # Select the appropriate table definition based on mode
-    # if mode == "cursed":
-    #     table_definition = const.CURSED_TABLE
-    # elif mode == "hbp":
-    #     table_definition = const.HBP_TABLE
-    # elif mode == "triples":
-    #     table_definition = const.TRIPLES_TABLE
-    # else:
-    #     # This should never be reached due to the validation above
-    #     table_definition = None
-
-    # if table_definition is None:
-    #     raise ValueError(f"No table definition found for mode: {mode}")
-
     # Generate SQL CREATE TABLE statement from the dictionary
     table_definition = get_table_definition(mode, verbose_bool)
     filename         = table_definition["filename"]
@@ -253,23 +234,13 @@ def create_database(mode: str, verbose_bool: Optional[bool] = False) -> bool:
 
     if verbose_bool:
         print(f"Creating database table for mode: {mode}")
+        print(f"Database file: {filename}")
         print(f"Table name: {tablename}")
         print(f"Using SQL statement: {create_statement[:100]}...")  # Show first 100 chars
 
+    # Create SQLiteManager instance and create the table
     try:
-        # Get the database configuration from config based on mode
-        bsky_root   = config.get("paths", "bsky_data_dir")
-        db_filename = config.get(mode, "db_filename")
-        data_root   = config.get(mode, "data_root")
-
-        # Construct the full database file path
-        db_file = os.path.join(bsky_root, data_root, db_filename)
-
-        if verbose_bool:
-            print(f"Database file: {db_file}")
-
-        # Create SQLiteManager instance and create the table
-        with SQLiteManager(db_file) as db_manager:
+        with SQLiteManager(filename) as db_manager:
             db_manager.create_table(create_statement)
             db_was_created = True
 
@@ -320,7 +291,7 @@ def insert_row(mode: str, game: list, event: list, verbose_bool: Optional[bool] 
             }
 
         with SQLiteManager(table_definition['filename']) as db:
-            row_inserted = db.insert_data(table_definition['tablename'], insert_data)
+            db.insert_data(table_definition['tablename'], insert_data)
             row_inserted = True
 
     return inserted
@@ -329,7 +300,7 @@ def delete_row(mode: str, play_id: str, verbose_bool: Optional[bool] = False) ->
     deleted = False
     table_definition = get_table_definition(mode, verbose_bool)
     with SQLiteManager(table_definition['filename']) as db:
-        delete_data = db.update_hbpdata_data(
+        delete_data = db.update_data(
             f"DELETE FROM {table_definition['tablename']} WHERE play_id = ?",
             [play_id]
         )

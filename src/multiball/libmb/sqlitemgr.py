@@ -5,7 +5,6 @@ class SQLiteManager:
     def __init__(self, db_file):
         self.conn   = sqlite3.connect(db_file)
         self.cursor = self.conn.cursor()
-        self.create_table()
 
     def create_table(self, create_statement):
         self.cursor.execute(create_statement)
