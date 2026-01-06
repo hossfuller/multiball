@@ -13,9 +13,6 @@ from .libmb import constants
 from .libmb import dbconnector
 from .libmb import logger
 from .libmb import sqlitemgr
-# from .libmb import func_general
-# from .libmb import func_baseball
-# from .libmb import func_skeet
 
 # Package-level variables
 __all__ = [
@@ -26,7 +23,4 @@ __all__ = [
     'dbconnector',
     'logger',
     'sqlitemgr',
-    # 'func_general',
-    # 'func_baseball',
-    # 'func_skeet',
 ]

@@ -41,7 +41,11 @@ class CmdParser:
 
     def _add_default_arguments(self) -> None:
         """
-        Add the default command line arguments: --test-mode (-t) and --verbose (-v).
+        Add the default command line arguments:
+            --nolog (-n)
+            --test-mode (-t)
+            --verbose (-v)
+            --double-verbose (-vv)
         """
         # Add --nolog argument with short form -n
         self.parser.add_argument(
@@ -76,11 +80,20 @@ class CmdParser:
         Add arguments to the parser from a dictionary configuration.
 
         Args:
-            arg_configs (Dict[str, Dict[str, Any]]): Dictionary where keys are
+            arg_configs (Dict[Union[str, tuple], Dict[str, Any]]): Dictionary where keys are
                 argument names/flags and values are dictionaries of kwargs to pass
                 to add_argument(). Keys can be:
                 - Single argument string: "--input-file"
                 - Tuple with short and long forms: ("-i", "--input-file")
+
+                Supported kwargs include all argparse.add_argument() parameters:
+                - type: str, int, float, bool, etc.
+                - default: default value
+                - required: True/False
+                - help: help text
+                - choices: list of acceptable values (for input restriction)
+                - action: "store", "store_true", "store_false", etc.
+                - And any other argparse parameter
 
         Example:
             {
@@ -98,6 +111,12 @@ class CmdParser:
                     "type": int,
                     "default": 100,
                     "help": "Maximum number of items to process"
+                },
+                "--log-level": {
+                    "type": str,
+                    "choices": ["debug", "info", "warning", "error"],
+                    "default": "info",
+                    "help": "Logging level (debug, info, warning, error)"
                 }
             }
         """
@@ -188,75 +207,85 @@ class CmdParser:
         return f"CmdParser(parsed_args={self.parsed_dict})"
 
 
-# # Example usage and testing
-# if __name__ == "__main__":
-#     # Example configuration dictionary demonstrating all supported formats
-#     example_config = {
-#         # Single long argument format (original)
-#         "--input-file": {
-#             "type": str,
-#             "required": True,
-#             "help": "Path to input file"
-#         },
+# Example usage and testing
+if __name__ == "__main__":
+    # Example configuration dictionary demonstrating all supported formats
+    example_config = {
+        # Single long argument format (original)
+        "--input-file": {
+            "type": str,
+            "required": True,
+            "help": "Path to input file"
+        },
 
-#         # Tuple format with short and long arguments (new feature)
-#         ("-o", "--output-dir"): {
-#             "type": str,
-#             "default": "./output",
-#             "help": "Output directory path"
-#         },
+        # Tuple format with short and long arguments (new feature)
+        ("-o", "--output-dir"): {
+            "type": str,
+            "default": "./output",
+            "help": "Output directory path"
+        },
 
-#         ("-m", "--max-items"): {
-#             "type": int,
-#             "default": 100,
-#             "help": "Maximum number of items to process"
-#         },
+        ("-m", "--max-items"): {
+            "type": int,
+            "default": 100,
+            "help": "Maximum number of items to process"
+        },
 
-#         # Boolean flag with tuple format
-#         ("-d", "--debug"): {
-#             "action": "store_true",
-#             "help": "Enable debug mode"
-#         }
-#     }
+        # Boolean flag with tuple format
+        ("-d", "--debug"): {
+            "action": "store_true",
+            "help": "Enable debug mode"
+        },
 
-#     # Create parser and add arguments
-#     parser = CmdParser(description="Example Command Line Parser with Short Arguments")
-#     parser.add_arguments_from_dict(example_config)
+        # Argument with restricted choices (input validation)
+        ("-l", "--log-level"): {
+            "type": str,
+            "choices": ["debug", "info", "warning", "error"],
+            "default": "info",
+            "help": "Logging level: debug, info, warning, or error"
+        }
+    }
 
-#     # Parse arguments - demonstrates various ways to call the script:
-#     # python script.py --input-file data.txt --output-dir ./results --max-items 50 --debug --test-mode --verbose
-#     # python script.py --input-file data.txt -o ./results -m 50 -d -t -v
-#     # python script.py --input-file data.txt -o ./results --max-items 75 -d -t -v
-#     parsed_args = parser.parse_args()
+    # Create parser and add arguments
+    parser = CmdParser(description="Example Command Line Parser with Short Arguments")
+    parser.add_arguments_from_dict(example_config)
 
-#     print("Parsed Arguments:")
-#     for key, value in parsed_args.items():
-#         print(f"  {key}: {value}")
+    # Parse arguments - demonstrates various ways to call the script:
+    # python script.py --input-file data.txt --output-dir ./results --max-items 50 --debug --test-mode --verbose
+    # python script.py --input-file data.txt -o ./results -m 50 -d -t -v
+    # python script.py --input-file data.txt -o ./results --max-items 75 -d -t -v
+    # python script.py --input-file data.txt -l warning  # Using choices argument
+    parsed_args = parser.parse_args()
 
-#     # Demonstrate accessing specific arguments using both long and short forms
-#     print(f"\nDefault arguments:")
-#     print(f"  Test mode enabled (-t/--test-mode): {parser.get_argument('--test-mode')}")
-#     print(f"  Verbose mode enabled (-v/--verbose): {parser.get_argument('--verbose')}")
+    print("Parsed Arguments:")
+    for key, value in parsed_args.items():
+        print(f"  {key}: {value}")
 
-#     print(f"\nCustom arguments:")
-#     print(f"  Input file (--input-file): {parser.get_argument('--input-file')}")
-#     print(f"  Output dir (-o/--output-dir): {parser.get_argument('--output-dir')}")
-#     print(f"  Max items (-m/--max-items): {parser.get_argument('--max-items')}")
-#     print(f"  Debug mode (-d/--debug): {parser.get_argument('--debug')}")
+    # Demonstrate accessing specific arguments using both long and short forms
+    print(f"\nDefault arguments:")
+    print(f"  Test mode enabled (-t/--test-mode): {parser.get_argument('--test-mode')}")
+    print(f"  Verbose mode enabled (-v/--verbose): {parser.get_argument('--verbose')}")
 
-#     # Demonstrate accessing the full parsed dictionary
-#     print(f"\nFull parsed dictionary:")
-#     print(f"  {parser.get_parsed_dict()}")
+    print(f"\nCustom arguments:")
+    print(f"  Input file (--input-file): {parser.get_argument('--input-file')}")
+    print(f"  Output dir (-o/--output-dir): {parser.get_argument('--output-dir')}")
+    print(f"  Max items (-m/--max-items): {parser.get_argument('--max-items')}")
+    print(f"  Debug mode (-d/--debug): {parser.get_argument('--debug')}")
+    print(f"  Log level (-l/--log-level): {parser.get_argument('--log-level')}")
 
-#     # Show how to use the arguments in a real script
-#     print(f"\nExample usage in script:")
-#     if parsed_args.get('test_mode'):
-#         print("  🧪 Running in test mode")
-#     if parsed_args.get('verbose'):
-#         print("  📢 Verbose logging enabled")
-#     if parsed_args.get('debug'):
-#         print("  🐛 Debug mode active")
+    # Demonstrate accessing the full parsed dictionary
+    print(f"\nFull parsed dictionary:")
+    print(f"  {parser.get_parsed_dict()}")
 
-#     print(f"  📁 Processing {parsed_args.get('input_file', 'no file')}")
-#     print(f"  📂 Output to {parsed_args.get('output_dir', 'default directory')}")
-#     print(f"  📊 Max items: {parsed_args.get('max_items', 0)}")
+    # Show how to use the arguments in a real script
+    print(f"\nExample usage in script:")
+    if parsed_args.get('test_mode'):
+        print("  🧪 Running in test mode")
+    if parsed_args.get('verbose'):
+        print("  📢 Verbose logging enabled")
+    if parsed_args.get('debug'):
+        print("  🐛 Debug mode active")
+
+    print(f"  📁 Processing {parsed_args.get('input_file', 'no file')}")
+    print(f"  📂 Output to {parsed_args.get('output_dir', 'default directory')}")
+    print(f"  📊 Max items: {parsed_args.get('max_items', 0)}")

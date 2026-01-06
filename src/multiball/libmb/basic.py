@@ -1,6 +1,11 @@
+import argparse
 import os
 import pathlib
 import platform
+
+from datetime import datetime, date, timedelta
+from typing import Optional
+
 
 ## -------------------------------------------------------------------------- ##
 ## CONSTANTS
@@ -8,11 +13,45 @@ import platform
 
 SYSTEM_NAME = platform.system()
 
+## -------------------------------------------------------------------------- ##
+## DATE FUNCTIONS
+## -------------------------------------------------------------------------- ##
+
+def parse_date_string(date_string):
+    try:
+        return datetime.strptime(date_string, '%Y-%m-%d').date()
+    except ValueError:
+        msg = f"Not a valid date format: '{date_string}'. Expected format: YYYY-MM-DD."
+        raise argparse.ArgumentTypeError(msg)
+
+
+def add_one_day_to_date(date_str: Optional[str] = None):
+    return transcend_time_and_space("forward", date_str)
+
+
+def subtract_one_day_from_date(date_str: Optional[str] = None):
+    return transcend_time_and_space("backward", date_str)
+
+
+def transcend_time_and_space(direction: str, date_str: Optional[str] = None):
+    return_date = None
+    if date_str is None:
+        if direction == "forward":
+            return_date = date.today() + timedelta(days=1)
+        else:
+            return_date = date.today() - timedelta(days=1)
+    else:
+        if direction == "forward":
+            new_date = datetime.strptime(str(date_str), "%Y-%m-%d").date() + timedelta(days=1)
+        else:
+            new_date = datetime.strptime(str(date_str), "%Y-%m-%d").date() - timedelta(days=1)
+        return_date =  new_date.strftime("%Y-%m-%d")
+    return return_date
+
 
 ## -------------------------------------------------------------------------- ##
-## FUNCTIONS
+## FILE PATHS AND SUCH
 ## -------------------------------------------------------------------------- ##
-
 
 def sanitize_path(path_string, return_path_obj=False):
     """
