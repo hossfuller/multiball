@@ -127,7 +127,7 @@ def get_mlb_events_from_single_game(mode: str, game: list, verbose_bool: Optiona
         live_feed_url = const.MLB_STATS_BASE_URL + game['link']
         if verbose_bool:
             print(f"Live feed URL: {live_feed_url}")
-        print(f"Live feed URL: {live_feed_url}")
+        # print(f"Live feed URL: {live_feed_url}")
 
         response = requests.get(live_feed_url, timeout=10)
         response.raise_for_status()
@@ -136,23 +136,24 @@ def get_mlb_events_from_single_game(mode: str, game: list, verbose_bool: Optiona
     except Exception as e:
         print(f"[ERROR] '{live_feed_url}' failed: {e}")
 
+    # Identify events at the play-result level (most reliable)
     for play in all_plays:
-        # Identify events at the play-result level (most reliable)
-
-        if mode == 'cursed':
-            ## Enumerate all the cursed plays
-            continue ## replace this when we're ready to figure out the logic.
+        derp_event = None
+        
+        if mode == 'derp':
+            ## Enumerate all the derp plays
+            derp_plays = []
+            ## derp_event = ??
+            continue 
         elif mode == "hbp":
             if play.get("result", {}).get("event") != "Hit By Pitch":
                 continue
         elif mode == "triples":
-            if play.get("result", {}).get("event") == "Triple Play" or play.get("result", {}).get("event") == "Triple":
-                ## We're going to want to grab the play's description for the skeet.
-                # pprint.pprint(play.get("playEvents", []))
-                ## This is what we came looking for!
-                pass
-            else:
-                continue 
+            if (
+                play.get("result", {}).get("event") != "Triple Play" and 
+                play.get("result", {}).get("event") != "Triple"
+            ):
+                continue
 
         # Find the final pitch event to extract play_id
         play_id = None
@@ -163,7 +164,7 @@ def get_mlb_events_from_single_game(mode: str, game: list, verbose_bool: Optiona
 
         if pitch_events:
             play_id = pitch_events[-1].get("playId")
-
+        
         if verbose_bool:
             print("@@-- Start --@@")
             pprint.pprint(play['playEvents'][-1])
@@ -199,6 +200,7 @@ def get_mlb_events_from_single_game(mode: str, game: list, verbose_bool: Optiona
                 'pitch_name'  : play['playEvents'][-1]['details']['type']['description'] if 'type' in play['playEvents'][-1]['details'] and play['playEvents'][-1]['details']['type'] != 'no_pitch' else None,
             },
             "description": play['result']['description'],
+            "derp_event": derp_event,
         })
 
     return events

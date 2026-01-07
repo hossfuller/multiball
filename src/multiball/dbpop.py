@@ -59,7 +59,7 @@ parser.add_arguments_from_dict({
     ("-m", "--mode"): {
         "type"    : str,
         "required": True,
-        "choices" : ["cursed", "hbp", "triples"],
+        "choices" : ["derp", "hbp", "triples"],
         "default" : mode,
         "help"    : "Specify which baseball mode to populate",
     },

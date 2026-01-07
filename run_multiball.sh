@@ -48,6 +48,5 @@ while [[ $# -gt 0 ]]; do
 done
 
 ## Run the selected module with remaining arguments
-echo "Running: python3 -m $target_module $@"
 python3 -m "$target_module" "$@"
 

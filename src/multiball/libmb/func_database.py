@@ -204,13 +204,13 @@ def set_hbp_flag(mode: str, play_id: str, flag: str, verbose_bool: Optional[bool
 
 def get_table_definition(mode: str, verbose_bool: Optional[bool] = False) -> dict:
     # Validate the mode parameter
-    valid_modes = ["cursed", "hbp", "triples"]
+    valid_modes = ["derp", "hbp", "triples"]
     if mode not in valid_modes:
         raise ValueError(f"Invalid mode '{mode}'. Must be one of: {valid_modes}")
 
     # Select the appropriate table definition based on mode
-    if mode == "cursed":
-        table_definition = const.CURSED_TABLE
+    if mode == "derp":
+        table_definition = const.DERP_TABLE
     elif mode == "hbp":
         table_definition = const.HBP_TABLE
     elif mode == "triples":
@@ -235,7 +235,7 @@ def create_database(mode: str, verbose_bool: Optional[bool] = False) -> bool:
     3. The appropriate table is created in the database
 
     Args:
-        mode (str): The type of database to create. Must be one of: "cursed", "hbp", or "triples".
+        mode (str): The type of database to create. Must be one of: "derp", "hbp", or "triples".
         verbose_bool (Optional[bool]): Whether to print verbose output. Defaults to False.
 
     Returns:
@@ -245,11 +245,11 @@ def create_database(mode: str, verbose_bool: Optional[bool] = False) -> bool:
         ValueError: If an invalid mode is provided.
 
     Example:
-        >>> create_database("cursed", verbose_bool=True)
-        Creating database table for mode: cursed
-        Database file: bsky_data/cursed/cursed.db
-        Creating new database file: bsky_data/cursed/cursed.db
-        ✅ Successfully created cursed database table
+        >>> create_database("derp", verbose_bool=True)
+        Creating database table for mode: derp
+        Database file: bsky_data/derp/derp.db
+        Creating new database file: bsky_data/derp/derp.db
+        ✅ Successfully created derp database table
         True
     """
     db_was_created = False
@@ -296,14 +296,15 @@ def insert_row(mode: str, game: list, event: list, verbose_bool: Optional[bool] 
 
     select_data = get_event_play_data(mode, event['play_id'], verbose_bool)
     if len(select_data) == 0:
-        if mode == "cursed":
+        if mode == "derp":
             insert_data = {
-                "play_id"   : event['play_id'],
-                "game_pk"   : game['game_pk'],
-                "game_date" : game['date'],
-                "pitcher_id": event['pitcher']['id'],
-                "batter_id" : event['batter']['id'],
-                "event"     : "cursed",
+                "play_id"    : event['play_id'],
+                "game_pk"    : game['game_pk'],
+                "game_date"  : game['date'],
+                "pitcher_id" : event['pitcher']['id'],
+                "batter_id"  : event['batter']['id'],
+                "event"      : event['derp_event'],
+                "description": event['description']
             }
         elif mode == "hbp":
             insert_data = {
