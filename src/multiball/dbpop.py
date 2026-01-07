@@ -186,7 +186,6 @@ def main(start_date: Optional[str] = None) -> int:
                             print()
                     except KeyboardInterrupt:
                         dbmgr.delete_row(mode, event['play_id'])
-                        print(f"[TEST] You quit on {mode}!")
 
                 time.sleep(sleep_time)
             print(f"💥 There were {event_count} total {mode} events for this day. 💥")

@@ -141,10 +141,19 @@ def get_mlb_events_from_single_game(mode: str, game: list, verbose_bool: Optiona
         derp_event = None
         
         if mode == 'derp':
-            ## Enumerate all the derp plays
-            derp_plays = []
-            ## derp_event = ??
-            continue 
+            derp_plays = [
+                "Balk", 
+                "Batter Interference", 
+                "Catcher Interference", 
+                "Caught Stealing 2B", 
+                "Caught Stealing 3B", 
+                "Caught Stealing Home", 
+                "Field Error",
+            ]
+            if play.get("result", {}).get("event") in derp_plays:
+                derp_event = play.get("result", {}).get("event")
+            else:
+                continue 
         elif mode == "hbp":
             if play.get("result", {}).get("event") != "Hit By Pitch":
                 continue
