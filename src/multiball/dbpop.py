@@ -154,6 +154,9 @@ def main(start_date: Optional[str] = None) -> int:
             for i, game in enumerate(mlb_games):
                 game_deets = bb.get_mlb_game_deets(game, double_verbose)
                 events = bb.get_mlb_events_from_single_game(mode, game, double_verbose)
+                ## The type of event is handled by the function itself when we
+                ## pass it the mode. So we don't need to seperate out the mode
+                ## events ourselves here.
 
                 if double_verbose:
                     print("@ --------- GAME DEETS --------- ")

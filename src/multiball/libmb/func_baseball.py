@@ -119,18 +119,6 @@ def get_mlb_player_details(player_id: int, verbose_bool: Optional[bool] = False)
 ## MODE FUNCTIONS
 ## -------------------------------------------------------------------------- ##
 
-def get_mlb_cursed_events_from_single_game(game: list, verbose_bool: Optional[bool] = False) -> list:
-    return get_mlb_events_from_single_game("cursed", game, verbose_bool)
-
-
-def get_mlb_hbp_events_from_single_game(game: list, verbose_bool: Optional[bool] = False) -> list:
-    return get_mlb_events_from_single_game("hbp", game, verbose_bool)
-
-
-def get_mlb_triples_events_from_single_game(game: list, verbose_bool: Optional[bool] = False) -> list:
-    return get_mlb_events_from_single_game("triples", game, verbose_bool)
-
-
 def get_mlb_events_from_single_game(mode: str, game: list, verbose_bool: Optional[bool] = False) -> list:
     events    = []
     all_plays = []
@@ -139,6 +127,7 @@ def get_mlb_events_from_single_game(mode: str, game: list, verbose_bool: Optiona
         live_feed_url = const.MLB_STATS_BASE_URL + game['link']
         if verbose_bool:
             print(f"Live feed URL: {live_feed_url}")
+        print(f"Live feed URL: {live_feed_url}")
 
         response = requests.get(live_feed_url, timeout=10)
         response.raise_for_status()
@@ -157,8 +146,13 @@ def get_mlb_events_from_single_game(mode: str, game: list, verbose_bool: Optiona
             if play.get("result", {}).get("event") != "Hit By Pitch":
                 continue
         elif mode == "triples":
-            ## Get only triples and almost triples.
-            continue ## replace this when we're ready to figure out the logic.
+            if play.get("result", {}).get("event") == "Triple Play" or play.get("result", {}).get("event") == "Triple":
+                ## We're going to want to grab the play's description for the skeet.
+                # pprint.pprint(play.get("playEvents", []))
+                ## This is what we came looking for!
+                pass
+            else:
+                continue 
 
         # Find the final pitch event to extract play_id
         play_id = None
