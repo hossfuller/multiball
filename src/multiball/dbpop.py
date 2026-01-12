@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 ## -------------------------------------------------------------------------- ##
-## Multiball Downloader
-## Using statcast data, builds a skeet and downloads the video if available.
-## Also updates the respective database for any future plotter scripts.
+## Multiball DB Populator
+## Using statcast data, fills in a database of targetted plays we want to
+## download/analyze/skeet in the future.
 ## -------------------------------------------------------------------------- ##
 
 import os

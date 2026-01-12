@@ -1,6 +1,6 @@
 # multiball
 
-Bluesky bot that posts cursed baseball plays, hit by pitches, and triples to different bsky accounts.
+Bluesky bot that posts derpie baseball plays, hit by pitches, and triples to different bsky accounts.
 
 
 <!-- --------------------------------------------------------------------------- -->
