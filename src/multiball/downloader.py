@@ -19,6 +19,7 @@ from .libmb import basic as bsc
 from .libmb import constants as const
 from .libmb import func_baseball as bb
 from .libmb import func_database as dbmgr
+from .libmb import func_skeet as sk
 
 from .libmb.cmdparser import CmdParser
 from .libmb.configurator import ConfigReader
@@ -36,6 +37,7 @@ backward       = False
 get_latest     = False
 mode           = "hbp"
 num_days       = 1
+skip_video_dl  = False
 sleep_time     = float(config.get("client_parameters", "sleep_time"))
 start_date     = datetime.strftime(datetime.now() - timedelta(days=1), '%Y-%m-%d')
 test_mode      = bool(int(config.get("operations", "test_mode")))
@@ -54,7 +56,7 @@ parser.add_arguments_from_dict({
     ("-d", "--num-days"): {
         "type"   : int,
         "default": num_days,
-        "help"   : "Number of days to check for HBP events. Defaults to '%(default)s'.",
+        "help"   : "Number of days to check for events. Defaults to '%(default)s'.",
     },
     ("-g", "--get-latest"): {
         "action" : "store_true",
@@ -71,7 +73,12 @@ parser.add_arguments_from_dict({
     ("-s", "--start-date"): {
         "type"   : bsc.parse_date_string,
         "default": start_date,
-        "help"   : "Start date to check for HBP events. Must be in '2025-11-01' format. Defaults to '%(default)s'.",
+        "help"   : "Start date to check for events. Must be in '2025-11-01' format. Defaults to '%(default)s'.",
+    },
+    ("--skip-video-dl"): {
+        "action" : "store_true",
+        "default": skip_video_dl,
+        "help"   : "Skips video download for each event",
     },
 })
 args = parser.parse_args()
@@ -85,6 +92,8 @@ if args.get("mode"):
     mode = args.get("mode")
 if args.get("num_days") and num_days > 0:
     num_days = args.get("num_days")
+if args.get("skip_video_dl"):
+    skip_video_dl = True
 if args.get("start_date"):
     start_date = args.get("start_date")
 if args.get("test_mode"):
@@ -153,51 +162,53 @@ def main(start_date: Optional[str] = None) -> int:
 
                 ## No events during this game....
                 if mode_events is None or len(mode_events) == 0:
-        # #             skeet_filename = sk.write_desc_skeet_text(game_deets, [], skeet_dir, double_verbose)
-        # #             if verbose:
-        # #                 print(f"{i + 1}. Skeet File: {skeet_filename}")
-        # #             skeet_text = sk.read_skeet_text(skeet_filename)
-        # #             print(f"{skeet_text}")
-        # #             print()
+                    skeet_filename = sk.write_desc_skeet_text(mode, game_deets, [], double_verbose)
+                    if verbose:
+                        print(f"{i + 1}. Skeet File: {skeet_filename}")
+                    skeet_text = sk.read_skeet_text(skeet_filename)
+                    print(f"{skeet_text}")
+                    print()
                     continue
+
 
                 ## MODE EVENT FOR LOOP
                 ## Loops through all the mode events.
                 for j, event in enumerate(mode_events):
                     mode_event_count = mode_event_count + 1
 
-        # #             ## Check if event is already in database. If not, add it.
-        # #             dbdata = dbmgr.get_hbp_play_data(event['play_id'])
-        # #             if len(dbdata) == 0:
-        # #                 dbinsert_result = dbmgr.insert_row(game_deets, event)
-        # #                 if dbinsert_result:
-        # #                     print(f"👍 HBP {event['play_id']} added to database.")
-        # #                 else:
-        # #                     raise Exception("Something is definitely wrong with the database file.")
+                    ## Check if event is already in database. If not, add it.
+                    dbdata = dbmgr.get_event_play_data(mode, event['play_id'], double_verbose)
+                    if len(dbdata) == 0:
+                        dbinsert_result = dbmgr.insert_row(mode, game_deets, event, double_verbose)
+                        if dbinsert_result:
+                            print(f"👍 HBP {event['play_id']} added to database.")
+                        else:
+                            raise Exception("Something is definitely wrong with the database file.")
 
-        # #             ## Generate skeet
-        # #             skeet_filename = sk.write_desc_skeet_text(game_deets, event, skeet_dir, double_verbose)
-        # #             if verbose:
-        # #                 print(f"{i + 1}. Skeet File: {skeet_filename}")
-        # #             ## Print skeet to screen
-        # #             skeet_text = sk.read_skeet_text(skeet_filename)
-        # #             print(f"{skeet_text}")
+                    ## Generate skeet
+                    skeet_filename = sk.write_desc_skeet_text(mode, game_deets, event, double_verbose)
+                    if verbose:
+                        print(f"{i + 1}. Skeet File: {skeet_filename}")
+                    ## Print skeet to screen
+                    skeet_text = sk.read_skeet_text(skeet_filename)
+                    print(f"{skeet_text}")
 
-        # #             ## Finally, download the video.
-        # #             if event['play_id'] is None or event['play_id'] == '':
-        # #                 print(f"😢 Video unavailable.")
-        # #             else:
-        # #                 ## download video
-        # #                 if test_mode:
-        # #                     print("Pretending to download video....")
-        # #                 elif skip_video_dl:
-        # #                     pass
-        # #                 else:
-        # #                     video_filename = bsc.download_baseball_savant_play(game['gamePk'], event['play_id'], verbose)
-        # #                     print(f"VIDEO: {video_filename}")
+                    ## Finally, download the video.
+                    if event['play_id'] is None or event['play_id'] == '':
+                        print(f"😢 Video unavailable.")
+                    else:
+                        ## download video
+                        if test_mode:
+                            print("Pretending to download video....")
+                        elif skip_video_dl:
+                            pass
+                        else:
+                            print("DOWNLOADING")
+                            video_filename = bb.download_baseball_savant_play(mode, game['gamePk'], event['play_id'], verbose)
+                            print(f"VIDEO: {video_filename}")
 
-        # #                     if os.path.exists(video_filename):
-        # #                         dbmgr.set_download_flag(event['play_id'])
+                            if os.path.exists(video_filename):
+                                dbmgr.set_download_flag(mode, event['play_id'])
 
                     print()
             print(f"💥 There were {mode_event_count} total {mode.capitalize()} events for this day. 💥")

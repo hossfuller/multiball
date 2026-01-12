@@ -29,6 +29,21 @@ MLB_STATS_PLAYER_STUB          = '/api/v1/people/<<PLAYER_ID>>'
 
 
 ## ---------------------------------------------------------------------------->
+## Events to catch
+## ---------------------------------------------------------------------------->
+DERP_EVENTS = [
+    "Balk",
+    "Batter Interference",
+    "Catcher Interference",
+    # "Caught Stealing 2B",
+    # "Caught Stealing 3B",
+    # "Caught Stealing Home",
+    "Field Error",
+]
+HBP_EVENTS = ["Hit By Pitch"]
+TRIPLES_EVENTS = ["Triple", "Triple Play"]
+
+## ---------------------------------------------------------------------------->
 ## Database Creation Statements
 ## ---------------------------------------------------------------------------->
 

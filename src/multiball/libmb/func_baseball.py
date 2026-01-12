@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
+import os
 import pprint
 import requests
 
+from bs4 import BeautifulSoup
+from tqdm import tqdm
 from typing import Optional
 
 from . import constants as const
@@ -23,6 +26,19 @@ def convert_int_to_ordinal_str(n):
     else:
         n_str = n_str + 'th'
     return n_str
+
+
+def build_event_count(at_bat_deets: list, verbose_bool: Optional[bool] = False) -> str:
+    count_str = f"{at_bat_deets['balls']}-{at_bat_deets['strikes']}, {at_bat_deets['outs_when_up']} out"
+    if at_bat_deets['outs_when_up'] != 1:
+        count_str = count_str + 's'
+    count_str = count_str + f", {at_bat_deets['half_inning'].lower()} of " + convert_int_to_ordinal_str(at_bat_deets['inning'])
+    return count_str
+
+
+def build_event_pitch(at_bat_deets: list, verbose_bool: Optional[bool] = False) -> str:
+    effective_speed = (at_bat_deets['start_speed'] + at_bat_deets['end_speed'])/2.0
+    return f"{effective_speed:.1f} mph {at_bat_deets['pitch_name'].lower()}"
 
 
 def build_mlb_player_display_string(player: list, verbose_bool: Optional[bool] = False) -> str:
@@ -138,41 +154,15 @@ def get_mlb_events_from_single_game(mode: str, game: list, verbose_bool: Optiona
 
     # Identify events at the play-result level (most reliable)
     for play in all_plays:
-        derp_event = None
-
-        if mode == 'caught':
-            caught_stealing = [
-                "Caught Stealing 2B",
-                "Caught Stealing 3B",
-                "Caught Stealing Home",
-            ]
-            if play.get("result", {}).get("event") in caught_stealing:
-                derp_event = play.get("result", {}).get("event")
-            else:
-                continue
-        elif mode == 'derp':
-            derp_plays = [
-                "Balk",
-                "Batter Interference",
-                "Catcher Interference",
-                # "Caught Stealing 2B",
-                # "Caught Stealing 3B",
-                # "Caught Stealing Home",
-                "Field Error",
-            ]
-            if play.get("result", {}).get("event") in derp_plays:
-                derp_event = play.get("result", {}).get("event")
-            else:
-                continue
-        elif mode == "hbp":
-            if play.get("result", {}).get("event") != "Hit By Pitch":
-                continue
-        elif mode == "triples":
-            if (
-                play.get("result", {}).get("event") != "Triple Play" and
-                play.get("result", {}).get("event") != "Triple"
-            ):
-                continue
+        triggering_event = None
+        if (
+            (mode == 'derp' and play.get("result", {}).get("event") in const.DERP_EVENTS) or
+            (mode == 'hbp' and play.get("result", {}).get("event") in const.HBP_EVENTS) or
+            (mode == 'triples' and play.get("result", {}).get("event") in const.TRIPLES_EVENTS)
+        ):
+            triggering_event = play.get("result", {}).get("event")
+        else:
+            continue
 
         # Find the final pitch event to extract play_id
         play_id = None
@@ -191,7 +181,7 @@ def get_mlb_events_from_single_game(mode: str, game: list, verbose_bool: Optiona
 
         events.append({
             "description": play['result']['description'],
-            "derp_event" : derp_event,
+            "event"      : triggering_event,
             "game_pk"    : game['gamePk'],
             "mode"       : mode,
             "play_id"    : play_id,
@@ -224,3 +214,58 @@ def get_mlb_events_from_single_game(mode: str, game: list, verbose_bool: Optiona
         })
 
     return events
+
+
+## -------------------------------------------------------------------------- ##
+## VIDEO FUNCTIONS
+## -------------------------------------------------------------------------- ##
+
+def download_baseball_savant_play(
+    mode: str,
+    game_pk: str,
+    play_id: str,
+    verbose_bool: Optional[bool] = False,
+) -> str:
+    page_url        = f"{const.BASEBALL_SAVANT_PLAY_VIDEO_URL}?playId={play_id}"
+    video_url       = None
+    video_file_path = None
+
+    ## Build filename
+    video_dir = const.HBP_PATHS['video_dir_fullpath']
+    if mode == "derp":
+        video_dir = const.DERP_PATHS['video_dir_fullpath']
+    elif mode == "triples":
+        video_dir = const.TRIPLES_PATHS['video_dir_fullpath']
+
+    print(f"VIDEO_DIR: {video_dir}")
+    try:
+        response = requests.get(page_url, timeout=10)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "lxml")
+        video_container = soup.find('div', class_='video-box')
+
+        ## Download that sucker!
+        if video_container:
+            video_url       = video_container.find('video').find('source', type='video/mp4')['src']
+            video_file_path = os.path.join(video_dir, f"{game_pk}_{play_id}.mp4")
+
+            if not os.path.exists(video_file_path):
+                video_res = requests.get(video_url, stream=True)
+                video_res.raise_for_status()
+
+                ## https://stackoverflow.com/a/37573701
+                total_size = int(video_res.headers.get('content-length', 0))
+                chunk_size = 1024  # 1 KB chunks
+                with tqdm(total=total_size, unit="B", unit_scale=True) as progress_bar:
+                    with open(video_file_path, "wb") as file:
+                        for data in video_res.iter_content(chunk_size):
+                            progress_bar.update(len(data))
+                            file.write(data)
+
+                if total_size != 0 and progress_bar.n != total_size:
+                    raise RuntimeError("Could not download file")
+
+    except Exception as e:
+        print(f"Error fetching video URL from {page_url}: {e}.")
+
+    return video_file_path

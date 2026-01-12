@@ -31,9 +31,9 @@ def get_all_pitcher_data(mode: str, player_id: int, verbose_bool: Optional[bool]
 
 
 def get_all_player_data(
-    mode: str, 
-    player_id: int, 
-    player_type: str, 
+    mode: str,
+    player_id: int,
+    player_type: str,
     verbose_bool: Optional[bool] = False
 ) -> list:
     player_data = []
@@ -103,7 +103,7 @@ def get_season_data(mode: str, season: int, verbose_bool: Optional[bool] = False
     season_end   = f"{season}-12-31"
 
     table_definition = get_table_definition(mode, verbose_bool)
-    with SQLiteManager(table_definition['filename']) as db: 
+    with SQLiteManager(table_definition['filename']) as db:
         season_data = db.query_data(
             f"SELECT * FROM {table_definition['tablename']} WHERE game_date BETWEEN ? AND ?",
             [season_start, season_end]
@@ -113,7 +113,7 @@ def get_season_data(mode: str, season: int, verbose_bool: Optional[bool] = False
 
 def get_season_year(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> str:
     current_play = get_event_play_data(mode, play_id, verbose_bool)
-    
+
     # Search through each column in current_play to find a YYYY-MM-DD date value
     season = None
     for column_value in current_play[0]:
@@ -124,10 +124,10 @@ def get_season_year(mode: str, play_id: str, verbose_bool: Optional[bool] = Fals
                 # Found a valid date, extract the year
                 season = parts[0]
                 break
-    
+
     if season is None:
         raise ValueError(f"No valid date found in play data for play_id: {play_id}")
-    
+
     return season
 
 
@@ -303,7 +303,7 @@ def insert_row(mode: str, game: list, event: list, verbose_bool: Optional[bool] 
                 "game_date"  : game['date'],
                 "pitcher_id" : event['pitcher']['id'],
                 "batter_id"  : event['batter']['id'],
-                "event"      : event['derp_event'],
+                "event"      : event['event'],
                 "description": event['description']
             }
         elif mode == "hbp":
