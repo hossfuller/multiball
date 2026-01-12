@@ -16,7 +16,6 @@ from typing import Optional
 
 # Import application modules
 from .libmb import basic as bsc
-from .libmb import cmdparser as cmd
 from .libmb import constants as const
 from .libmb import func_baseball as bb
 from .libmb import func_database as dbmgr
@@ -146,7 +145,7 @@ def main(start_date: Optional[str] = None) -> int:
         for xday in range(num_days):
             print(f'⚾ [{xday+1}/{num_days}] Checking {start_date} for games...', end='')
             mlb_games = bb.get_mlb_games_for_date(start_date)
-            print(f'found {len(mlb_games)} games that day. ⚾')
+            print(f'found {len(mlb_games)} game(s) that day. ⚾')
 
             ## "GAME" FOR LOOP
             ## Loops through all the games for the day.

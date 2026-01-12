@@ -16,7 +16,6 @@ from typing import Optional
 
 # Import application modules
 from .libmb import basic as bsc
-from .libmb import cmdparser as cmd
 from .libmb import constants as const
 from .libmb import func_baseball as bb
 from .libmb import func_database as dbmgr
@@ -127,89 +126,90 @@ def main(start_date: Optional[str] = None) -> int:
         start_time = time.time()
 
         if get_latest:
-            start_date = dbmgr.get_latest_date_that_hasnt_been_downloaded(mode, verbose)
+            start_date = dbmgr.get_latest_date_that_hasnt_been_downloaded(mode, double_verbose)
 
+        total_mode_events = 0
+        for xday in range(num_days):
+            print("--->")
+            print(f'⚾ Checking {start_date} for games...', end='')
+            mlb_games = bb.get_mlb_games_for_date(start_date)
+            print(f'found {len(mlb_games)} game(s) that day. ⚾')
+            print()
 
-        # ## First check if the database file already exists. If it doesn't,
-        # ## create it, then create the table.
-        # db_create_result = False
-        # db_definition = dbmgr.get_table_definition(mode, verbose)
-        # if os.path.exists(bsc.sanitize_path(db_definition["filename"])):
-        #     print(f"💾 '{mode}' database file:  {db_definition["filename"]}")
-        # else:
-        #     print(f"‼️ No database file exists for '{mode}'. Creating '{db_definition["filename"]}'...")
-        #     db_create_result = dbmgr.create_database(mode, verbose)
-        #     if db_create_result:
-        #         print(f"💾 '{db_definition["filename"]}' has been created.")
+            ## "GAME" FOR LOOP
+            ## Loops through all the games for the day.
+            mode_event_count = 0
+            for i, game in enumerate(mlb_games):
+                game_deets = bb.get_mlb_game_deets(game, double_verbose)
+                mode_events = bb.get_mlb_events_from_single_game(mode, game, double_verbose)
 
-        # if os.path.getsize(db_definition["filename"]) == 0:
-        #     db_create_result = dbmgr.create_database(mode, verbose)
-        # else:
-        #     db_create_result = True
+                if double_verbose:
+                    print("@ --------- GAME DEETS --------- ")
+                    pprint.pprint(game_deets)
+                    print("@ --------- HBP EVENTS --------- ")
+                    pprint.pprint(mode_events)
+                    print("@ ------------ END ------------- ")
+                    print()
 
-        # if db_create_result:
-        #     print(f"💾 '{mode}' database table: {db_definition["tablename"]}")
-        # else:
-        #     raise Exception(f"❌ Database file/table is not in a condition for writing!")
-        # print()
+                ## No events during this game....
+                if mode_events is None or len(mode_events) == 0:
+        # #             skeet_filename = sk.write_desc_skeet_text(game_deets, [], skeet_dir, double_verbose)
+        # #             if verbose:
+        # #                 print(f"{i + 1}. Skeet File: {skeet_filename}")
+        # #             skeet_text = sk.read_skeet_text(skeet_filename)
+        # #             print(f"{skeet_text}")
+        # #             print()
+                    continue
 
-        # ## Now start in on parsing out baseball events based on mode.
-        # total_events = 0
-        # for xday in range(num_days):
-        #     print(f'⚾ [{xday+1}/{num_days}] Checking {start_date} for games...', end='')
-        #     mlb_games = bb.get_mlb_games_for_date(start_date)
-        #     print(f'found {len(mlb_games)} games that day. ⚾')
+                ## MODE EVENT FOR LOOP
+                ## Loops through all the mode events.
+                for j, event in enumerate(mode_events):
+                    mode_event_count = mode_event_count + 1
 
-        #     ## "GAME" FOR LOOP
-        #     ## Loops through all the games for the day.
-        #     event_count = 0
-        #     for i, game in enumerate(mlb_games):
-        #         game_deets = bb.get_mlb_game_deets(game, double_verbose)
-        #         events = bb.get_mlb_events_from_single_game(mode, game, double_verbose)
-        #         ## The type of event is handled by the function itself when we
-        #         ## pass it the mode. So we don't need to seperate out the mode
-        #         ## events ourselves here.
+        # #             ## Check if event is already in database. If not, add it.
+        # #             dbdata = dbmgr.get_hbp_play_data(event['play_id'])
+        # #             if len(dbdata) == 0:
+        # #                 dbinsert_result = dbmgr.insert_row(game_deets, event)
+        # #                 if dbinsert_result:
+        # #                     print(f"👍 HBP {event['play_id']} added to database.")
+        # #                 else:
+        # #                     raise Exception("Something is definitely wrong with the database file.")
 
-        #         if double_verbose:
-        #             print("@ --------- GAME DEETS --------- ")
-        #             pprint.pprint(game_deets)
-        #             print("@ ----------- EVENTS ----------- ")
-        #             pprint.pprint(events)
-        #             print("@ ------------ END ------------- ")
-        #             print()
+        # #             ## Generate skeet
+        # #             skeet_filename = sk.write_desc_skeet_text(game_deets, event, skeet_dir, double_verbose)
+        # #             if verbose:
+        # #                 print(f"{i + 1}. Skeet File: {skeet_filename}")
+        # #             ## Print skeet to screen
+        # #             skeet_text = sk.read_skeet_text(skeet_filename)
+        # #             print(f"{skeet_text}")
 
-        #         ## "EVENT" FOR LOOP
-        #         ## Loops through all the HBP events.
-        #         for j, event in enumerate(events):
-        #             try:
-        #                 dbinsert_result = dbmgr.insert_row(mode, game_deets, event)
-        #                 event_count = event_count + 1
+        # #             ## Finally, download the video.
+        # #             if event['play_id'] is None or event['play_id'] == '':
+        # #                 print(f"😢 Video unavailable.")
+        # #             else:
+        # #                 ## download video
+        # #                 if test_mode:
+        # #                     print("Pretending to download video....")
+        # #                 elif skip_video_dl:
+        # #                     pass
+        # #                 else:
+        # #                     video_filename = bsc.download_baseball_savant_play(game['gamePk'], event['play_id'], verbose)
+        # #                     print(f"VIDEO: {video_filename}")
 
-        #                 if dbinsert_result:
-        #                     print(f"  {event_count:02}. 👍 {mode.upper()} {event['play_id']} added to database.")
-        #                 else:
-        #                     print(f"  {event_count:02}. 🦋 {mode.upper()} {event['play_id']} is already in the database.", end='')
-        #                     if dbmgr.has_been_downloaded(mode, event['play_id'], verbose):
-        #                         print(f" (dl)", end='')
-        #                     if dbmgr.has_been_analyzed(mode, event['play_id'], verbose):
-        #                         print(f" (nz)", end='')
-        #                     if dbmgr.has_been_skeeted(mode, event['play_id'], verbose):
-        #                         print(f" (sk)", end='')
-        #                     print()
-        #             except KeyboardInterrupt:
-        #                 dbmgr.delete_row(mode, event['play_id'])
+        # #                     if os.path.exists(video_filename):
+        # #                         dbmgr.set_download_flag(event['play_id'])
 
-        #         time.sleep(sleep_time)
-        #     print(f"💥 There were {event_count} total {mode} events for this day. 💥")
-        #     print()
-        #     total_events = total_events + event_count
+                    print()
+            print(f"💥 There were {mode_event_count} total {mode.capitalize()} events for this day. 💥")
+            print("<---\n")
+            total_mode_events = total_mode_events + mode_event_count
 
-        #     if backward:
-        #         start_date = bsc.subtract_one_day_from_date(start_date)
-        #     else:
-        #         start_date = bsc.add_one_day_to_date(start_date)
+            if backward:
+                start_date = bsc.subtract_one_day_from_date(start_date)
+            else:
+                start_date = bsc.add_one_day_to_date(start_date)
 
-        # print(f"⚾💥 Captured {total_events} during this run.")
+        print(f"⚾💥 Captured {total_mode_events} during this run.")
 
         print()
         end_time = time.time()

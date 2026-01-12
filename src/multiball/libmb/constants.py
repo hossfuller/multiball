@@ -93,3 +93,90 @@ TRIPLES_TABLE = {
         "skeeted"   : "INTEGER NOT NULL DEFAULT 0",
     }
 }
+
+
+## ---------------------------------------------------------------------------->
+## Filesystem Paths
+## ---------------------------------------------------------------------------->
+
+DERP_PATHS = {
+    'root': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("derp", "data_root"),
+    ),
+    'database_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("derp", "data_root"),
+        config.get("derp", "db_filename")
+    ),
+    'plot_dir_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("derp", "data_root"),
+        config.get("paths", "plot_dir")
+    ),
+    'skeet_dir_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("derp", "data_root"),
+        config.get("paths", "skeet_dir")
+    ),
+    'video_dir_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("derp", "data_root"),
+        config.get("paths", "video_dir")
+    ),
+}
+
+HBP_PATHS = {
+    'root': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("hbp", "data_root"),
+    ),
+    'database_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("hbp", "data_root"),
+        config.get("hbp", "db_filename")
+    ),
+    'plot_dir_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("hbp", "data_root"),
+        config.get("paths", "plot_dir")
+    ),
+    'skeet_dir_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("hbp", "data_root"),
+        config.get("paths", "skeet_dir")
+    ),
+    'video_dir_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("hbp", "data_root"),
+        config.get("paths", "video_dir")
+    ),
+}
+
+TRIPLES_PATHS = {
+    'root': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("triples", "data_root"),
+    ),
+    'database_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("triples", "data_root"),
+        config.get("triples", "db_filename")
+    ),
+    'plot_dir_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("triples", "data_root"),
+        config.get("paths", "plot_dir")
+    ),
+    'skeet_dir_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("triples", "data_root"),
+        config.get("paths", "skeet_dir")
+    ),
+    'video_dir_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("triples", "data_root"),
+        config.get("paths", "video_dir")
+    ),
+}
+
