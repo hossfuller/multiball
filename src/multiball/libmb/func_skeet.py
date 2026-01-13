@@ -68,21 +68,25 @@ def read_skeet_text(filename: str, verbose_bool: Optional[bool] = False) -> str:
 
 
 def trim_skeet_text(skeet_list: List[str], verbose_bool: Optional[bool] = False) -> List[str]:
-    idx                    = -2  ## event description location in skeet.
-    most_characters_length = 0
+    idx                = -2                   ## event description location in skeet.
+    total_char_length  = 0
+    number_of_newlines = len(skeet_list) - 1  ## don't forget '\n's that'll join
+                                              ## all the lines together later
 
     if not skeet_list or len(skeet_list) == 0:
         pass
+
+    ## How did a skeet_list with only one element get in?
     elif len(skeet_list) == 1:
-        ## How did a skeet_list with only one element get in?
-        allowed = max(const.SKEETS_CHAR_LIMIT - most_characters_length, 0)
+        allowed = max(const.SKEETS_CHAR_LIMIT - total_char_length - number_of_newlines, 0)
         if len(skeet_list[0]) > allowed:
             skeet_list[idx] = skeet_list[idx][:allowed-3] + '...'
+
     else:
         for i, s in enumerate(skeet_list):
             if i != (len(skeet_list) + idx):
-                most_characters_length = most_characters_length + len(s)
-        allowed = max(const.SKEETS_CHAR_LIMIT - most_characters_length, 0)
+                total_char_length = total_char_length + len(s)
+        allowed = max(const.SKEETS_CHAR_LIMIT - total_char_length - number_of_newlines, 0)
         if len(skeet_list[idx]) > allowed:
             skeet_list[idx] = skeet_list[idx][:allowed-3] + '...'
 
@@ -97,6 +101,14 @@ def write_desc_skeet_text(mode: str, game: list, event: list, verbose_bool: Opti
         print("# ---")
         pprint.pprint(event)
 
+    # print("--- GAME START ---")
+    # pprint.pprint(game)
+    # print("--- GAME END ---")
+    # print("--- EVENT START ---")
+    # pprint.pprint(event)
+    # print("--- EVENT END ---")
+
+
     ## Defaults to HBP emoji.
     mode_emoji = "⚾💥"
     if mode == "derp":
@@ -104,84 +116,113 @@ def write_desc_skeet_text(mode: str, game: list, event: list, verbose_bool: Opti
     elif mode == 'triples':
         mode_emoji = "⚾⚾⚾"
 
+    ## All the things we want to include in various formats.
     game_datetime_obj = datetime.strptime(game['date'], "%Y-%m-%d")
     date_str          = f"{mode_emoji} {game_datetime_obj.strftime("%d %B %Y")} {mode_emoji[::-1]}"
+    teams_str         = f"{game['away']['full_name']} at {game['home']['full_name']}"
     series_desc_str   = f"Game: {game['description']}"
+    play_desc_str     = f"{event['description']}" if 'description' in event else None
+    boring_game_str   = f"👍 Nothing happened! What a boring game...."
+    current_score_str = None
+    final_score_str   = None
+    count_str         = None
+    pitch_str         = None
+    pitcher_str_long  = None
+    pitcher_str_short = None
+    batter_str_long   = None
+    batter_str_short  = None
 
-    ## If the game is finished, there'll be a final score.
-    winning_team  = None
-    winning_score = None
-    losing_score  = None
-    if ('final_score' in game['home'] and
+    ## -------------------------------------------------------------------------
+    ## If the game is finished, there'll be a final score. This is the only
+    ## thing we figure out before checking for events because otherwise
+    ## everything gets real sticky.
+    ## -------------------------------------------------------------------------
+    if (
+        'final_score' in game['home'] and
         game['home']['final_score'] is not None and
         game['away']['final_score'] is not None
     ):
-        winning_team       = game['away']['team']
-        winning_score      = game['away']['final_score']
-        losing_score       = game['home']['final_score']
+        winning_team  = game['away']['club_name']
+        winning_score = game['away']['final_score']
+        losing_score  = game['home']['final_score']
         if game['home']['final_score'] > game['away']['final_score']:
-            winning_team  = game['home']['team']
+            winning_team  = game['home']['club_name']
             winning_score = game['home']['final_score']
             losing_score  = game['away']['final_score']
+        final_score_str = f"Final: {winning_team} won {winning_score}-{losing_score} in {game['innings']} innings"
 
+    ## -------------------------------------------------------------------------
     ## If nothing happened, add that to the skeet_strs list.
+    ## -------------------------------------------------------------------------
     if len(event) == 0:
-        team_str           = f"⚾🧤 {game['away']['team']} at {game['home']['team']} 🧤⚾"
-        nobody_got_hit_str = f"👍 Nothing happened! What a boring game...."
+        skeet_strs = [date_str, teams_str, series_desc_str, boring_game_str, final_score_str]
 
-        winning_line_str = ''
-        if winning_team is not None:
-            winning_line_str = f"{winning_team} won {winning_score}-{losing_score} in {game['innings']} innings"
-
-        skeet_strs = [team_str, date_str, series_desc_str, nobody_got_hit_str, winning_line_str]
-
+    ## -------------------------------------------------------------------------
     ## Something cool happened!
+    ## -------------------------------------------------------------------------
     else:
+        ## Figure out the current score during event.
         game_is_tied   = False
-        leading_team   = game['away']['team']
+        leading_team   = game['away']['club_name']
         leading_score  = event['at_bat']['away_score']
         trailing_score = event['at_bat']['home_score']
         if event['at_bat']['home_score'] > event['at_bat']['away_score']:
-            leading_team   = game['home']['team']
+            leading_team   = game['home']['club_name']
             leading_score  = event['at_bat']['home_score']
             trailing_score = event['at_bat']['away_score']
         elif event['at_bat']['home_score'] == event['at_bat']['away_score']:
             game_is_tied = True
-
-        # teamname_str = bb.get_mlb_team_attribute(leading_team, 'teamname')
-        teamname_str = None
-        if teamname_str is None:
-            teamname_str = leading_team
-        score_str   = f"{teamname_str} up {leading_score}-{trailing_score}"
+        current_score_str = f"{leading_team} up {leading_score}-{trailing_score}"
         if game_is_tied:
-            score_str = f"tied at {leading_score}-{trailing_score}"
+            current_score_str = f"tied at {leading_score}-{trailing_score}"
 
-        batter_str      = f"Batter: {bb.build_mlb_player_display_string(event['batter'])}"
-        pitcher_str     = f"Pitcher: {bb.build_mlb_player_display_string(event['pitcher'])}"
-        count_str       = f"The Play: {bb.build_event_count(event['at_bat'])}, {score_str}"
-        pitch_str       = f"The Pitch: {bb.build_event_pitch(event['at_bat'])}"
+        ## The count, current score, and the pitch
+        count_str = f"The Play: {bb.build_event_count(event['at_bat'])}, {current_score_str}"
+        pitch_str = f"The Pitch: {bb.build_event_pitch(event['at_bat'])}"
 
-        final_score_str = ''
-        if 'final_score' in game['home']:
-            final_score_str = f"Final: {winning_team} won {winning_score}-{losing_score} in {game['innings']} innings."
+        ## Build batter string
+        batter_str_long  = f"Batter: {bb.build_mlb_player_display_string(event['batter'])} - {game['home']['full_name']}"
+        batter_str_short = f"Batter: {bb.build_mlb_player_display_string(event['batter'])} - {game['home']['team_location']}"
+        if event['batter']['team'] == game['away']['full_name']:
+            batter_str_long  = f"Batter: {bb.build_mlb_player_display_string(event['batter'])} - {game['away']['full_name']}"
+            batter_str_short = f"Batter: {bb.build_mlb_player_display_string(event['batter'])} - {game['away']['team_location']}"
 
-        ## Defaults to HBP skeet.
-        skeet_strs = [date_str, series_desc_str, pitcher_str, batter_str, count_str, pitch_str, final_score_str]
+        ## Build pitcher string
+        pitcher_str_long  = f"Pitcher: {bb.build_mlb_player_display_string(event['pitcher'])} - {game['home']['full_name']}"
+        pitcher_str_short = f"Pitcher: {bb.build_mlb_player_display_string(event['pitcher'])} - {game['home']['team_location']}"
+        if event['pitcher']['team'] == game['away']['full_name']:
+            pitcher_str_long  = f"Pitcher: {bb.build_mlb_player_display_string(event['pitcher'])} - {game['away']['full_name']}"
+            pitcher_str_short = f"Pitcher: {bb.build_mlb_player_display_string(event['pitcher'])} - {game['away']['team_location']}"
+
+        ## ---------------------------------------------------------------------
+        ## Construct the skeets now! Default to HBP skeet form.
+        ## ---------------------------------------------------------------------
+        skeet_strs = [date_str, series_desc_str, pitcher_str_long, batter_str_long, count_str, pitch_str, final_score_str]
         if mode == "derp" and event['event'] == 'Balk':
-            skeet_strs = trim_skeet_text([date_str, series_desc_str, pitcher_str, count_str, f"Balk: {event['description']}", final_score_str])
+            skeet_strs = trim_skeet_text([
+                date_str, teams_str, series_desc_str, pitcher_str_short, count_str, f"Balk: {play_desc_str}", final_score_str
+            ])
         elif mode == "derp" and event['event'] == 'Batter Interference':
-            skeet_strs = trim_skeet_text([date_str, series_desc_str, pitcher_str, batter_str, count_str, f"Interference: {event['description']}", final_score_str])
+            skeet_strs = trim_skeet_text([
+                date_str, teams_str, series_desc_str, pitcher_str_short, batter_str_short, count_str, f"Interference: {play_desc_str}", final_score_str
+            ])
         elif mode == "derp" and event['event'] == 'Catcher Interference':
-            skeet_strs = trim_skeet_text([date_str, series_desc_str, count_str, f"Interference: {event['description']}", final_score_str])
+            skeet_strs = trim_skeet_text([
+                date_str, teams_str, series_desc_str, count_str, f"Interference: {play_desc_str}", final_score_str
+            ])
         elif mode == "derp" and event['event'] == 'Field Error':
-            skeet_strs = trim_skeet_text([date_str, series_desc_str, count_str, f"Error: {event['description']}", final_score_str])
+            skeet_strs = trim_skeet_text([
+                date_str, teams_str, series_desc_str, count_str, f"Error: {play_desc_str}", final_score_str
+            ])
         elif mode == "triples" and event['event'] in const.TRIPLES_EVENTS:
-            skeet_strs = trim_skeet_text([date_str, series_desc_str, count_str, f"💥{event['description']}💥", final_score_str])
+            skeet_strs = trim_skeet_text([
+                date_str, teams_str, series_desc_str, count_str, f"💥{play_desc_str}💥", final_score_str
+            ])
 
     total_skeet_str = "\n".join(skeet_strs)
     total_skeet_length = len(total_skeet_str)
-    # if total_skeet_length > const.SKEETS_CHAR_LIMIT:
-    #     raise Exception("Basic skeet text is already too long!")
+    if total_skeet_length > const.SKEETS_CHAR_LIMIT:
+        raise Exception(f"Basic skeet text is too long! (len = {total_skeet_length}):\n--\n{total_skeet_str}\n--\n")
 
     ## Build filename
     skeet_dir = const.HBP_PATHS['skeet_dir_fullpath']

@@ -42,27 +42,34 @@ def build_event_pitch(at_bat_deets: list, verbose_bool: Optional[bool] = False) 
 
 
 def build_mlb_player_display_string(player: list, verbose_bool: Optional[bool] = False) -> str:
-    player_string = f"{player['name']} ({player['hand']}) - {player['team']}"
+    player_string = f"{player['name']} ({player['hand']})"
     if verbose_bool:
         player_string = player_string + f" [id = {player['id']}]"
     return player_string
 
 
 def get_mlb_game_deets(game: list, verbose_bool: Optional[bool] = False) -> list:
+    home_team_deets = get_mlb_team_details(game['teams']['home']['team']['id'], verbose_bool)
+    away_team_deets = get_mlb_team_details(game['teams']['away']['team']['id'], verbose_bool)
+
     game_deets = {
         'home': {
-            'team'       : game['teams']['home']['team']['name'] if 'name' in game['teams']['home']['team'] else 'N/A',
-            'final_score': game['teams']['home']['score'] if 'score' in game['teams']['home'] else None,
-            'wins'       : game['teams']['home']['leagueRecord']['wins'],
-            'losses'     : game['teams']['home']['leagueRecord']['losses'],
-            'pct'        : game['teams']['home']['leagueRecord']['pct'],
+            'team_location': home_team_deets['location_name'],  ## "Toronto"
+            'club_name'    : home_team_deets['club_name'],      ## "Blue Jays"
+            'full_name'    : home_team_deets['name'],           ## "Toronto Blue Jays"
+            'final_score'  : game['teams']['home']['score'] if 'score' in game['teams']['home'] else None,
+            'wins'         : game['teams']['home']['leagueRecord']['wins'],
+            'losses'       : game['teams']['home']['leagueRecord']['losses'],
+            'pct'          : game['teams']['home']['leagueRecord']['pct'],
         },
         'away': {
-            'team'       : game['teams']['away']['team']['name'] if 'name' in game['teams']['away']['team'] else 'N/A',
-            'final_score': game['teams']['away']['score'] if 'score' in game['teams']['away'] else None,
-            'wins'       : game['teams']['away']['leagueRecord']['wins'],
-            'losses'     : game['teams']['away']['leagueRecord']['losses'],
-            'pct'        : game['teams']['away']['leagueRecord']['pct'],
+            'team_location': away_team_deets['location_name'],  ## "Toronto"
+            'club_name'    : away_team_deets['club_name'],      ## "Blue Jays"
+            'full_name'    : away_team_deets['name'],           ## "Toronto Blue Jays"
+            'final_score'  : game['teams']['away']['score'] if 'score' in game['teams']['away'] else None,
+            'wins'         : game['teams']['away']['leagueRecord']['wins'],
+            'losses'       : game['teams']['away']['leagueRecord']['losses'],
+            'pct'          : game['teams']['away']['leagueRecord']['pct'],
         },
         'description': game['seriesDescription'],
         'date'       : game['officialDate'],
@@ -129,6 +136,30 @@ def get_mlb_player_details(player_id: int, verbose_bool: Optional[bool] = False)
     }
 
     return player_details
+
+
+def get_mlb_team_details(team_id: int, verbose_bool: Optional[bool] = False) -> list:
+    team_details_url = const.MLB_STATS_BASE_URL + const.MLB_STATS_TEAM_STUB.replace('<<TEAM_ID>>', str(team_id))
+    response = requests.get(team_details_url, timeout=10)
+    response.raise_for_status()
+    data = response.json()
+
+    if verbose_bool:
+        pprint.pprint(data)
+
+    team_details = {
+        'id'            : data['teams'][0]['id'],
+        'link'          : data['teams'][0]['link'],
+        'club_name'     : data['teams'][0]['clubName'],
+        'franchise_name': data['teams'][0]['franchiseName'],
+        'location_name' : data['teams'][0]['locationName'],
+        'name'          : data['teams'][0]['name'],
+        'short_name'    : data['teams'][0]['shortName'],
+        'team_name'     : data['teams'][0]['teamName'],
+        'venue'         : data['teams'][0]['venue']['name'],
+    }
+
+    return team_details
 
 
 ## -------------------------------------------------------------------------- ##

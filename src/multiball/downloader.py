@@ -155,7 +155,7 @@ def main(start_date: Optional[str] = None) -> int:
                 if double_verbose:
                     print("@ --------- GAME DEETS --------- ")
                     pprint.pprint(game_deets)
-                    print("@ --------- HBP EVENTS --------- ")
+                    print("@ --------- MODE EVENTS --------- ")
                     pprint.pprint(mode_events)
                     print("@ ------------ END ------------- ")
                     print()
@@ -169,7 +169,6 @@ def main(start_date: Optional[str] = None) -> int:
                     print(f"{skeet_text}")
                     print()
                     continue
-
 
                 ## MODE EVENT FOR LOOP
                 ## Loops through all the mode events.

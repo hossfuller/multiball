@@ -26,6 +26,7 @@ MLB_STATS_SCHEDULE_STUB        = '/api/v1/schedule'
 MLB_STATS_GAME_STUB            = '/api/v1/game/<<GAME_PK>>/content'
 MLB_STATS_LIVE_FEED_STUB       = '/api/v1.1/game/<<GAME_PK>>/feed/live'
 MLB_STATS_PLAYER_STUB          = '/api/v1/people/<<PLAYER_ID>>'
+MLB_STATS_TEAM_STUB            = '/api/v1/teams/<<TEAM_ID>>'
 
 
 ## ---------------------------------------------------------------------------->
@@ -139,6 +140,16 @@ DERP_PATHS = {
         config.get("derp", "data_root"),
         config.get("paths", "video_dir")
     ),
+    'username_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("derp", "data_root"),
+        config.get("derp", "bsky_user_file")
+    ),
+    'password_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("derp", "data_root"),
+        config.get("derp", "bsky_pwd_file")
+    ),
 }
 
 HBP_PATHS = {
@@ -166,6 +177,16 @@ HBP_PATHS = {
         config.get("hbp", "data_root"),
         config.get("paths", "video_dir")
     ),
+    'username_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("hbp", "data_root"),
+        config.get("hbp", "bsky_user_file")
+    ),
+    'password_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("hbp", "data_root"),
+        config.get("hbp", "bsky_pwd_file")
+    ),
 }
 
 TRIPLES_PATHS = {
@@ -192,6 +213,16 @@ TRIPLES_PATHS = {
         config.get("paths", "bsky_data_dir"),
         config.get("triples", "data_root"),
         config.get("paths", "video_dir")
+    ),
+    'username_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("triples", "data_root"),
+        config.get("triples", "bsky_user_file")
+    ),
+    'password_fullpath': os.path.join(
+        config.get("paths", "bsky_data_dir"),
+        config.get("triples", "data_root"),
+        config.get("triples", "bsky_pwd_file")
     ),
 }
 
