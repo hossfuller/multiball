@@ -248,55 +248,55 @@ def main(num_posts: Optional[int] = 1) -> int:
             ## 4. Use atproto client to construct and send skeet(s).
             if video_filepath:
                 vid_data = None
-        #         with open(video_filepath, 'rb') as f:
-        #             vid_data = f.read()
-        #         if vid_data:
-        #             try:
-        #                 root_post_ref = models.create_strong_ref(
-        #                     client.send_video(
-        #                         text=skeet_text,
-        #                         video=vid_data,
-        #                         video_alt=f"A video showing the hit-by-pitch at-bat."
-        #                     )
-        #                 )
-        #             except exceptions.NetworkError as e:
-        #                 print(f"[p:{play_id}] Network error occurred: {e}")
-        #             except exceptions.AtProtocolError as e:
-        #                 print(f"[p:{play_id}] An AT Protocol error occurred: {e}")
-        #             except Exception as e:
-        #                 print(f"[p:{play_id}] A general error occurred: {e}")
-        #         else:
-        #             raise Exception(f"❌ Unable to read video file {video_filepath}!")
-        #     else:
-        #         root_post_ref = models.create_strong_ref(client.send_post(skeet_text))
+                with open(video_filepath, 'rb') as f:
+                    vid_data = f.read()
+                if vid_data:
+                    try:
+                        root_post_ref = models.create_strong_ref(
+                            client.send_video(
+                                text=skeet_text,
+                                video=vid_data,
+                                video_alt=f"A video showing the hit-by-pitch at-bat."
+                            )
+                        )
+                    except exceptions.NetworkError as e:
+                        print(f"[p:{play_id}] Network error occurred: {e}")
+                    except exceptions.AtProtocolError as e:
+                        print(f"[p:{play_id}] An AT Protocol error occurred: {e}")
+                    except Exception as e:
+                        print(f"[p:{play_id}] A general error occurred: {e}")
+                else:
+                    raise Exception(f"❌ Unable to read video file {video_filepath}!")
+            else:
+                root_post_ref = models.create_strong_ref(client.send_post(skeet_text))
 
-        #     if plots:
-        #         images = []
-        #         for plot_path in plots:
-        #             with open(plot_path, 'rb') as f:
-        #                 images.append(f.read())
+            if plots:
+                images = []
+                for plot_path in plots:
+                    with open(plot_path, 'rb') as f:
+                        images.append(f.read())
 
-        #         first_datetime_obj = datetime.strptime(dbmgr.get_earliest_date(), "%Y-%m-%d")
-        #         try:
-        #             reply_to_root = models.create_strong_ref(
-        #                 client.send_images(
-        #                     text=f"Based on data collected through {first_datetime_obj.strftime("%d %b %Y")}.",
-        #                     images=images,
-        #                     image_alts=plot_alts,
-        #                     reply_to=models.AppBskyFeedPost.ReplyRef(parent=root_post_ref, root=root_post_ref),
-        #                 )
-        #             )
-        #         except exceptions.NetworkError as e:
-        #             print(f"[c:{play_id}] Network error occurred: {e}")
-        #         except exceptions.AtProtocolError as e:
-        #             print(f"[c:{play_id}] An AT Protocol error occurred: {e}")
-        #         except Exception as e:
-        #             print(f"[c:{play_id}] A general error occurred: {e}")
+                first_datetime_obj = datetime.strptime(dbmgr.get_earliest_date(mode), "%Y-%m-%d")
+                try:
+                    reply_to_root = models.create_strong_ref(
+                        client.send_images(
+                            text=f"Based on data collected through {first_datetime_obj.strftime("%d %b %Y")}.",
+                            images=images,
+                            image_alts=plot_alts,
+                            reply_to=models.AppBskyFeedPost.ReplyRef(parent=root_post_ref, root=root_post_ref),
+                        )
+                    )
+                except exceptions.NetworkError as e:
+                    print(f"[c:{play_id}] Network error occurred: {e}")
+                except exceptions.AtProtocolError as e:
+                    print(f"[c:{play_id}] An AT Protocol error occurred: {e}")
+                except Exception as e:
+                    print(f"[c:{play_id}] A general error occurred: {e}")
 
-            # # 5. Clean up!
-            # if not test_mode:
-            #     dbmgr.set_skeeted_flag(play_id)
-            #     sk.cleanup_after_skeet(mode, int(game_pk), play_id, verbose)
+            # 5. Clean up!
+            if not test_mode:
+                dbmgr.set_skeeted_flag(mode, play_id, verbose)
+                sk.cleanup_after_skeet(mode, int(game_pk), play_id, verbose)
 
             print()
             skeet_counter = skeet_counter + 1
