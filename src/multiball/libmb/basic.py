@@ -17,9 +17,10 @@ SYSTEM_NAME = platform.system()
 ## DATE FUNCTIONS
 ## -------------------------------------------------------------------------- ##
 
+
 def parse_date_string(date_string):
     try:
-        return datetime.strptime(date_string, '%Y-%m-%d').date()
+        return datetime.strptime(date_string, "%Y-%m-%d").date()
     except ValueError:
         msg = f"Not a valid date format: '{date_string}'. Expected format: YYYY-MM-DD."
         raise argparse.ArgumentTypeError(msg)
@@ -45,13 +46,14 @@ def transcend_time_and_space(direction: str, date_str: Optional[str] = None):
             new_date = datetime.strptime(str(date_str), "%Y-%m-%d").date() + timedelta(days=1)
         else:
             new_date = datetime.strptime(str(date_str), "%Y-%m-%d").date() - timedelta(days=1)
-        return_date =  new_date.strftime("%Y-%m-%d")
+        return_date = new_date.strftime("%Y-%m-%d")
     return return_date
 
 
 ## -------------------------------------------------------------------------- ##
 ## FILE PATHS AND SUCH
 ## -------------------------------------------------------------------------- ##
+
 
 def sanitize_path(path_string, return_path_obj=False):
     """

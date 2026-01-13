@@ -49,33 +49,36 @@ class CmdParser:
         """
         # Add --nolog argument with short form -n
         self.parser.add_argument(
-            "-n", "--nolog",
-            action="store_true",
-            help="Disable logging"
+            "-n", "--nolog", action="store_true", help="Disable logging"
         )
 
         # Add --test-mode argument with short form -t
         self.parser.add_argument(
-            "-t", "--test-mode",
+            "-t",
+            "--test-mode",
             action="store_true",
-            help="Enable test mode for debugging and testing purposes"
+            help="Enable test mode for debugging and testing purposes",
         )
 
         # Add --verbose argument with short form -v
         self.parser.add_argument(
-            "-v", "--verbose",
+            "-v",
+            "--verbose",
             action="store_true",
-            help="Enable verbose output for detailed logging"
+            help="Enable verbose output for detailed logging",
         )
 
         # Add --double-verbose argument with short form -vv
         self.parser.add_argument(
-            "-vv", "--double-verbose",
+            "-vv",
+            "--double-verbose",
             action="store_true",
-            help="Enable *really* verbose output for *really* detailed logging"
+            help="Enable *really* verbose output for *really* detailed logging",
         )
 
-    def add_arguments_from_dict(self, arg_configs: Dict[Union[str, tuple], Dict[str, Any]]) -> None:
+    def add_arguments_from_dict(
+        self, arg_configs: Dict[Union[str, tuple], Dict[str, Any]]
+    ) -> None:
         """
         Add arguments to the parser from a dictionary configuration.
 
@@ -212,38 +215,27 @@ if __name__ == "__main__":
     # Example configuration dictionary demonstrating all supported formats
     example_config = {
         # Single long argument format (original)
-        "--input-file": {
-            "type": str,
-            "required": True,
-            "help": "Path to input file"
-        },
-
+        "--input-file": {"type": str, "required": True, "help": "Path to input file"},
         # Tuple format with short and long arguments (new feature)
         ("-o", "--output-dir"): {
             "type": str,
             "default": "./output",
-            "help": "Output directory path"
+            "help": "Output directory path",
         },
-
         ("-m", "--max-items"): {
             "type": int,
             "default": 100,
-            "help": "Maximum number of items to process"
+            "help": "Maximum number of items to process",
         },
-
         # Boolean flag with tuple format
-        ("-d", "--debug"): {
-            "action": "store_true",
-            "help": "Enable debug mode"
-        },
-
+        ("-d", "--debug"): {"action": "store_true", "help": "Enable debug mode"},
         # Argument with restricted choices (input validation)
         ("-l", "--log-level"): {
             "type": str,
             "choices": ["debug", "info", "warning", "error"],
             "default": "info",
-            "help": "Logging level: debug, info, warning, or error"
-        }
+            "help": "Logging level: debug, info, warning, or error",
+        },
     }
 
     # Create parser and add arguments
@@ -279,11 +271,11 @@ if __name__ == "__main__":
 
     # Show how to use the arguments in a real script
     print(f"\nExample usage in script:")
-    if parsed_args.get('test_mode'):
+    if parsed_args.get("test_mode"):
         print("  🧪 Running in test mode")
-    if parsed_args.get('verbose'):
+    if parsed_args.get("verbose"):
         print("  📢 Verbose logging enabled")
-    if parsed_args.get('debug'):
+    if parsed_args.get("debug"):
         print("  🐛 Debug mode active")
 
     print(f"  📁 Processing {parsed_args.get('input_file', 'no file')}")

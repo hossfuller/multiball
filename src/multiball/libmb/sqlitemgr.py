@@ -1,9 +1,9 @@
 import sqlite3
-from typing import Optional
+
 
 class SQLiteManager:
     def __init__(self, db_file):
-        self.conn   = sqlite3.connect(db_file)
+        self.conn = sqlite3.connect(db_file)
         self.cursor = self.conn.cursor()
 
     def create_table(self, create_statement):
@@ -13,17 +13,20 @@ class SQLiteManager:
     def insert_data(self, table_name: str, insert_data: dict) -> bool:
         insert_result = False
         try:
-            columns = ', '.join(insert_data.keys())
-            placeholders = ', '.join(['?'] * len(insert_data))
-            values = tuple(insert_data.values())
+            #fmt: off
+            columns      = ", ".join(insert_data.keys())
+            placeholders = ", ".join(["?"] * len(insert_data))
+            values       = tuple(insert_data.values())
+            #fmt: on
 
-            self.cursor.execute(f"""
+            self.cursor.execute(
+                f"""
                 INSERT INTO {table_name}
                     ({columns})
                 VALUES
                     ({placeholders})
                 """,
-                values
+                values,
             )
             num_inserted = self.cursor.rowcount
             if self.cursor.rowcount > 0:
@@ -44,7 +47,7 @@ class SQLiteManager:
         records = self.cursor.fetchall()
         return records
 
-    def update_data(self, query: str,  args: list) -> list:
+    def update_data(self, query: str, args: list) -> list:
         self.cursor.execute(query, args)
         self.conn.commit()
         return self.cursor.rowcount

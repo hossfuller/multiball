@@ -23,7 +23,7 @@ class PrintLogger:
             level=logging.INFO,
             format="%(asctime)s - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
-            encoding='utf-8',
+            encoding="utf-8",
         )
 
     def write(self, message):

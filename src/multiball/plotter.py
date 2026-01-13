@@ -28,25 +28,30 @@ from .libmb.logger import PrintLogger
 ## -------------------------------------------------------------------------- ##
 
 ## Read and update configuration
-config = ConfigReader(bsc.verify_file_path(bsc.sanitize_path(const.DEFAULT_CONFIG_INI_FILE)))
+config = ConfigReader(
+    bsc.verify_file_path(bsc.sanitize_path(const.DEFAULT_CONFIG_INI_FILE))
+)
 
+#fmt: off
 mode           = "hbp"
 test_mode      = bool(int(config.get("operations", "test_mode")))
 verbose        = bool(int(config.get("operations", "verbose_output")))
 double_verbose = bool(int(config.get("operations", "double_verbose")))
-
+#fmt: on
 
 ## Create parser and add arguments
 parser = CmdParser(description="Analyzes event data and generates plots.")
-parser.add_arguments_from_dict({
-    ("-m", "--mode"): {
-        "type"    : str,
-        "required": True,
-        "choices" : ["derp", "hbp", "triples"],
-        "default" : mode,
-        "help"    : "Specify which baseball mode to populate",
-    },
-})
+parser.add_arguments_from_dict(
+    {
+        ("-m", "--mode"): {
+            "type": str,
+            "required": True,
+            "choices": ["derp", "hbp", "triples"],
+            "default": mode,
+            "help": "Specify which baseball mode to populate",
+        },
+    }
+)
 args = parser.parse_args()
 
 ## Now pull config and command line action together.
@@ -61,7 +66,7 @@ if args.get("verbose"):
 if args.get("double_verbose"):
     config.set("operations", "verbose_output", "1")
     config.set("operations", "double_verbose", "1")
-    verbose        = True
+    verbose = True
     double_verbose = True
 
 ## Set up logging
@@ -77,6 +82,7 @@ if not args.get("nolog"):
 ## MAIN ACTION
 ## -------------------------------------------------------------------------- ##
 
+
 def main() -> int:
     try:
         print()
@@ -85,14 +91,14 @@ def main() -> int:
             print(config.get_all())
             print()
 
-        print("="*80)
+        print("=" * 80)
         print(f" ⚾ {config.get('app', 'name')} ⚾ ~~> ⏬ {mode.capitalize()} Plotter")
-        print("="*80)
+        print("=" * 80)
         start_time = time.time()
 
         ## Comment this part out if/when we figure out what sort of plots to do
         ## for everything besides HBP events.
-        if mode == 'derp' or mode == 'triples':
+        if mode == "derp" or mode == "triples":
             raise ValueError(f"🙀 Unsupported event. Finishing...\n")
 
         ## The plan:
@@ -109,14 +115,14 @@ def main() -> int:
         ##  7c. Plot pitcher_career_data as gray, current_play color coded to end_speed.
 
         ## 1. Get a list of all current skeets in skeet_dir waiting to go.
-        plot_dir  = const.HBP_PATHS['plot_dir_fullpath']
-        skeet_dir = const.HBP_PATHS['skeet_dir_fullpath']
+        plot_dir = const.HBP_PATHS["plot_dir_fullpath"]
+        skeet_dir = const.HBP_PATHS["skeet_dir_fullpath"]
         if mode == "derp":
-            plot_dir  = const.DERP_PATHS['plot_dir_fullpath']
-            skeet_dir = const.DERP_PATHS['skeet_dir_fullpath']
+            plot_dir = const.DERP_PATHS["plot_dir_fullpath"]
+            skeet_dir = const.DERP_PATHS["skeet_dir_fullpath"]
         elif mode == "triples":
-            plot_dir  = const.TRIPLES_PATHS['plot_dir_fullpath']
-            skeet_dir = const.TRIPLES_PATHS['skeet_dir_fullpath']
+            plot_dir = const.TRIPLES_PATHS["plot_dir_fullpath"]
+            skeet_dir = const.TRIPLES_PATHS["skeet_dir_fullpath"]
 
         skeet_dir_files = sorted(os.listdir(skeet_dir))
         if verbose:
@@ -124,8 +130,8 @@ def main() -> int:
 
         for skeet_file in skeet_dir_files:
             full_skeet_filename = os.path.join(skeet_dir, skeet_file)
-            skeet_root, ext     = os.path.splitext(skeet_file)
-            skeet_parts         = skeet_root.split('_')
+            skeet_root, ext = os.path.splitext(skeet_file)
+            skeet_parts = skeet_root.split("_")
 
             ## Not a file we want to work with
             if not skeet_parts[0].isdigit():
@@ -158,55 +164,59 @@ def main() -> int:
                 pprint.pprint(current_play)
 
             ##  5. Extract the season, batter_id, and pitcher_id.
-            game_date        = current_play[0][2]
-            season,month,day = game_date.split('-')
-            pitcher_info     = bb.get_mlb_player_details(current_play[0][3], verbose)
-            batter_info      = bb.get_mlb_player_details(current_play[0][4], verbose)
+            #fmt: off
+            game_date          = current_play[0][2]
+            season, month, day = game_date.split("-")
+            pitcher_info       = bb.get_mlb_player_details(current_play[0][3], verbose)
+            batter_info        = bb.get_mlb_player_details(current_play[0][4], verbose)
+            #fmt: on
             if verbose:
                 pprint.pprint(pitcher_info)
                 pprint.pprint(batter_info)
-            # pprint.pprint(pitcher_info)
-            # pprint.pprint(batter_info)
 
             ##  6. Query the season, pitcher_id, batter_id.
-            all_season_data     = dbmgr.get_season_data(mode, int(season), verbose)
-            pitcher_career_data = dbmgr.get_all_pitcher_data(mode, pitcher_info['id'], verbose)
-            batter_career_data  = dbmgr.get_all_batter_data(mode, batter_info['id'], verbose)
+            all_season_data = dbmgr.get_season_data(mode, int(season), verbose)
+            pitcher_career_data = dbmgr.get_all_pitcher_data(
+                mode, pitcher_info["id"], verbose
+            )
+            batter_career_data = dbmgr.get_all_batter_data(
+                mode, batter_info["id"], verbose
+            )
             print(f"   In {season} there have been {len(all_season_data)} HBP events.")
-            print(f"   {pitcher_info['name']} ({pitcher_info['primary_position']}) has hit {len(pitcher_career_data)} batters in his career.")
-            print(f"   {batter_info['name']} ({batter_info['primary_position']}) has been hit {len(batter_career_data)} times in his career.")
+            print(
+                f"   {pitcher_info['name']} ({pitcher_info['primary_position']}) has hit {len(pitcher_career_data)} batters in his career."
+            )
+            print(
+                f"   {batter_info['name']} ({batter_info['primary_position']}) has been hit {len(batter_career_data)} times in his career."
+            )
 
             if all_season_data and len(all_season_data) > 0:
                 ##  7a. Plot all_season_data as gray, current_play color coded to end_speed.
-                print(f"   📊 Creating scatter plot for this {mode} against all {mode} events for {season}...")
+                print(
+                    f"   📊 Creating scatter plot for this {mode} against all {mode} events for {season}..."
+                )
                 plot_result = plotter.plot_hbp_current_play_against_season(
-                    current_play,
-                    all_season_data,
-                    pitcher_info,
-                    batter_info,
-                    verbose
+                    current_play, all_season_data, pitcher_info, batter_info, verbose
                 )
                 if not plot_result:
                     continue
 
                 ##  7b. Plot batter_career_data as gray, current_play color coded to end_speed.
-                print(f"   📊 Creating scatter plot for this batter's career {mode} events...")
+                print(
+                    f"   📊 Creating scatter plot for this batter's career {mode} events..."
+                )
                 plot_result = plotter.plot_hbp_batter_play_against_career(
-                    current_play,
-                    batter_career_data,
-                    batter_info,
-                    verbose
+                    current_play, batter_career_data, batter_info, verbose
                 )
                 if not plot_result:
                     continue
 
                 ##  7c. Plot pitcher_career_data as gray, current_play color coded to end_speed.
-                print(f"   📊 Creating scatter plot for this pitcher's career {mode} events...")
+                print(
+                    f"   📊 Creating scatter plot for this pitcher's career {mode} events..."
+                )
                 plot_result = plotter.plot_hbp_pitcher_play_against_career(
-                    current_play,
-                    pitcher_career_data,
-                    pitcher_info,
-                    verbose
+                    current_play, pitcher_career_data, pitcher_info, verbose
                 )
                 if not plot_result:
                     continue
@@ -221,9 +231,9 @@ def main() -> int:
 
         end_time = time.time()
         elapsed = end_time - start_time
-        print("="*80)
-        print(f'Completed in {elapsed:.2f} seconds')
-        print("="*80)
+        print("=" * 80)
+        print(f"Completed in {elapsed:.2f} seconds")
+        print("=" * 80)
         print()
         return 0
 

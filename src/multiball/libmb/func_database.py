@@ -15,18 +15,29 @@ from typing import Optional
 ## DATABASE CONFIG
 ## -------------------------------------------------------------------------- ##
 
-config = ConfigReader(bsc.verify_file_path(bsc.sanitize_path(const.DEFAULT_CONFIG_INI_FILE)))
+config = ConfigReader(
+    bsc.verify_file_path(bsc.sanitize_path(const.DEFAULT_CONFIG_INI_FILE))
+)
 
 
 ## -------------------------------------------------------------------------- ##
 ## DATABASE WRAPPER FUNCTIONS
 ## -------------------------------------------------------------------------- ##
 
-def get_all_batter_data(mode: str, player_id: int, verbose_bool: Optional[bool] = False) -> list:
+
+def get_all_batter_data(
+    mode: str,
+    player_id: int,
+    verbose_bool: Optional[bool] = False
+) -> list:
     return get_all_player_data(mode, player_id, "batter", verbose_bool)
 
 
-def get_all_pitcher_data(mode: str, player_id: int, verbose_bool: Optional[bool] = False) -> list:
+def get_all_pitcher_data(
+    mode: str,
+    player_id: int,
+    verbose_bool: Optional[bool] = False
+) -> list:
     return get_all_player_data(mode, player_id, "pitcher", verbose_bool)
 
 
@@ -43,75 +54,94 @@ def get_all_player_data(
     if player_type not in player_types:
         return player_data
 
-    with SQLiteManager(table_definition['filename']) as db:
+    with SQLiteManager(table_definition["filename"]) as db:
         player_data = db.query_data(
             f"SELECT * FROM {table_definition['tablename']} WHERE {player_type}_id = ?",
-            [player_id]
+            [player_id],
         )
     return player_data
 
 
-def get_earliest_date(mode: str, verbose_bool: Optional[bool] = False) -> str:
+def get_earliest_date(
+    mode: str,
+    verbose_bool: Optional[bool] = False
+) -> str:
     select_data = None
     table_definition = get_table_definition(mode, verbose_bool)
-    with SQLiteManager(table_definition['filename']) as db:
+    with SQLiteManager(table_definition["filename"]) as db:
         select_data = db.query_data(
-            f"SELECT MIN(game_date) FROM {table_definition['tablename']}",
-            []
+            f"SELECT MIN(game_date) FROM {table_definition['tablename']}", []
         )
     return select_data[0][0]
 
 
-def get_event_play_data(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> list:
+def get_event_play_data(
+    mode: str,
+    play_id: str,
+    verbose_bool: Optional[bool] = False
+) -> list:
     select_data = []
     table_definition = get_table_definition(mode, verbose_bool)
-    with SQLiteManager(table_definition['filename']) as db:
+    with SQLiteManager(table_definition["filename"]) as db:
         select_data = db.query_data(
             f"SELECT * FROM {table_definition['tablename']} WHERE play_id = ?",
-            [play_id]
+            [play_id],
         )
     return select_data
 
 
-def get_latest_date(mode: str, verbose_bool: Optional[bool] = False) -> str:
+def get_latest_date(
+    mode: str,
+    verbose_bool: Optional[bool] = False
+) -> str:
     select_data = None
 
     table_definition = get_table_definition(mode, verbose_bool)
-    with SQLiteManager(table_definition['filename']) as db:
+    with SQLiteManager(table_definition["filename"]) as db:
         select_data = db.query_data(
-            f"SELECT MAX(game_date) FROM {table_definition['tablename']}",
-            []
+            f"SELECT MAX(game_date) FROM {table_definition['tablename']}", []
         )
 
     return select_data[0][0]
 
 
-def get_latest_date_that_hasnt_been_downloaded(mode: str, verbose_bool: Optional[bool] = False) -> str:
+def get_latest_date_that_hasnt_been_downloaded(
+    mode: str,
+    verbose_bool: Optional[bool] = False
+) -> str:
     select_data = None
     table_definition = get_table_definition(mode, verbose_bool)
-    with SQLiteManager(table_definition['filename']) as db:
+    with SQLiteManager(table_definition["filename"]) as db:
         select_data = db.query_data(
             f"SELECT MAX(game_date) FROM {table_definition['tablename']} WHERE downloaded = 0",
-            []
+            [],
         )
     return select_data[0][0]
 
 
-def get_season_data(mode: str, season: int, verbose_bool: Optional[bool] = False) -> list:
-    season_data  = []
+def get_season_data(
+    mode: str,
+    season: int,
+    verbose_bool: Optional[bool] = False
+) -> list:
+    season_data = []
     season_start = f"{season}-01-01"
-    season_end   = f"{season}-12-31"
+    season_end = f"{season}-12-31"
 
     table_definition = get_table_definition(mode, verbose_bool)
-    with SQLiteManager(table_definition['filename']) as db:
+    with SQLiteManager(table_definition["filename"]) as db:
         season_data = db.query_data(
             f"SELECT * FROM {table_definition['tablename']} WHERE game_date BETWEEN ? AND ?",
-            [season_start, season_end]
+            [season_start, season_end],
         )
     return season_data
 
 
-def get_season_year(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> str:
+def get_season_year(
+    mode: str,
+    play_id: str,
+    verbose_bool: Optional[bool] = False
+) -> str:
     current_play = get_event_play_data(mode, play_id, verbose_bool)
 
     # Search through each column in current_play to find a YYYY-MM-DD date value
@@ -119,7 +149,7 @@ def get_season_year(mode: str, play_id: str, verbose_bool: Optional[bool] = Fals
     for column_value in current_play[0]:
         if column_value and isinstance(column_value, str):
             # Check if the value looks like a date in YYYY-MM-DD format
-            parts = column_value.split('-')
+            parts = column_value.split("-")
             if len(parts) == 3 and len(parts[0]) == 4 and parts[0].isdigit():
                 # Found a valid date, extract the year
                 season = parts[0]
@@ -131,31 +161,48 @@ def get_season_year(mode: str, play_id: str, verbose_bool: Optional[bool] = Fals
     return season
 
 
-def has_been_downloaded(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> bool:
+def has_been_downloaded(
+    mode: str,
+    play_id: str,
+    verbose_bool: Optional[bool] = False
+) -> bool:
     return has_been_done(mode, play_id, "downloaded")
 
 
-def has_been_analyzed(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> bool:
+def has_been_analyzed(
+    mode: str,
+    play_id: str,
+    verbose_bool: Optional[bool] = False
+) -> bool:
     return has_been_done(mode, play_id, "analyzed")
 
 
-def has_been_skeeted(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> bool:
+def has_been_skeeted(
+    mode: str,
+    play_id: str,
+    verbose_bool: Optional[bool] = False
+) -> bool:
     return has_been_done(mode, play_id, "skeeted")
 
 
-def has_been_done(mode: str, play_id: str, flag: str, verbose_bool: Optional[bool] = False) -> bool:
+def has_been_done(
+    mode: str,
+    play_id: str,
+    flag: str,
+    verbose_bool: Optional[bool] = False
+) -> bool:
     flag_status = False
 
     ## Validate the flag
-    valid_flags = ['downloaded', 'analyzed', 'skeeted']
+    valid_flags = ["downloaded", "analyzed", "skeeted"]
     if flag not in valid_flags:
         raise ValueError(f"Invalid flag '{flag}'. Must be one of: {valid_flags}")
 
     table_definition = get_table_definition(mode, verbose_bool)
-    with SQLiteManager(table_definition['filename']) as db:
+    with SQLiteManager(table_definition["filename"]) as db:
         select_data = db.query_data(
             f"SELECT {flag} FROM {table_definition['tablename']} WHERE play_id = ?",
-            [play_id]
+            [play_id],
         )
         if len(select_data) == 1 and select_data[0][0] == 1:
             flag_status = True
@@ -163,37 +210,58 @@ def has_been_done(mode: str, play_id: str, flag: str, verbose_bool: Optional[boo
     return flag_status
 
 
-def set_download_flag(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> bool:
-    return set_hbp_flag(mode, play_id, 'downloaded', verbose_bool)
+def set_download_flag(
+    mode: str,
+    play_id: str,
+    verbose_bool: Optional[bool] = False
+) -> bool:
+    return set_hbp_flag(mode, play_id, "downloaded", verbose_bool)
 
 
-def set_analyzed_flag(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> bool:
-    return set_hbp_flag(mode, play_id, 'analyzed', verbose_bool)
+def set_analyzed_flag(
+    mode: str,
+    play_id: str,
+    verbose_bool: Optional[bool] = False
+) -> bool:
+    return set_hbp_flag(mode, play_id, "analyzed", verbose_bool)
 
 
-def set_skeeted_flag(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> bool:
-    return set_hbp_flag(mode, play_id, 'skeeted', verbose_bool)
+def set_skeeted_flag(
+    mode: str,
+    play_id: str,
+    verbose_bool: Optional[bool] = False
+) -> bool:
+    return set_hbp_flag(mode, play_id, "skeeted", verbose_bool)
 
 
-def set_hbp_flag(mode: str, play_id: str, flag: str, verbose_bool: Optional[bool] = False) -> bool:
-    flags       = ['downloaded', 'analyzed', 'skeeted']
+def set_hbp_flag(
+    mode: str,
+    play_id: str,
+    flag: str,
+    verbose_bool: Optional[bool] = False
+) -> bool:
+    flags = ["downloaded", "analyzed", "skeeted"]
     flag_status = False
 
     if flag not in flags:
         return flag_status
 
     table_definition = get_table_definition(mode, verbose_bool)
-    with SQLiteManager(table_definition['filename']) as db:
+    with SQLiteManager(table_definition["filename"]) as db:
         update_data = db.update_data(
             f"UPDATE {table_definition['tablename']} SET {flag} = 1 WHERE play_id = ?",
-            [play_id]
+            [play_id],
         )
         if update_data == 0:
-            raise Exception(f"Play ID {play_id} doesn't exist in the {table_definition['filename']} database!")
+            raise Exception(
+                f"Play ID {play_id} doesn't exist in the {table_definition['filename']} database!"
+            )
         elif update_data == 1:
             flag_status = True
         else:
-            raise Exception(f"More than one entry in {table_definition['tablename']} was updated! THIS SHOULDN'T HAPPEN.")
+            raise Exception(
+                f"More than one entry in {table_definition['tablename']} was updated! THIS SHOULDN'T HAPPEN."
+            )
     return flag_status
 
 
@@ -202,7 +270,10 @@ def set_hbp_flag(mode: str, play_id: str, flag: str, verbose_bool: Optional[bool
 ## -------------------------------------------------------------------------- ##
 
 
-def get_table_definition(mode: str, verbose_bool: Optional[bool] = False) -> dict:
+def get_table_definition(
+    mode: str,
+    verbose_bool: Optional[bool] = False
+) -> dict:
     # Validate the mode parameter
     valid_modes = ["derp", "hbp", "triples"]
     if mode not in valid_modes:
@@ -225,7 +296,10 @@ def get_table_definition(mode: str, verbose_bool: Optional[bool] = False) -> dic
     return table_definition
 
 
-def create_database(mode: str, verbose_bool: Optional[bool] = False) -> bool:
+def create_database(
+    mode: str,
+    verbose_bool: Optional[bool] = False
+) -> bool:
     """
     Create a database table based on the specified mode.
 
@@ -256,9 +330,9 @@ def create_database(mode: str, verbose_bool: Optional[bool] = False) -> bool:
 
     # Generate SQL CREATE TABLE statement from the dictionary
     table_definition = get_table_definition(mode, verbose_bool)
-    filename         = table_definition["filename"]
-    tablename        = table_definition["tablename"]
-    columns          = table_definition["columns"]
+    filename = table_definition["filename"]
+    tablename = table_definition["tablename"]
+    columns = table_definition["columns"]
 
     # Build the column definitions
     column_definitions = []
@@ -266,13 +340,19 @@ def create_database(mode: str, verbose_bool: Optional[bool] = False) -> bool:
         column_definitions.append(f"{column_name} {column_def}")
 
     # Create the full SQL statement
-    create_statement = f"CREATE TABLE IF NOT EXISTS {tablename} (\n    " + ",\n    ".join(column_definitions) + "\n)"
+    create_statement = (
+        f"CREATE TABLE IF NOT EXISTS {tablename} (\n    "
+        + ",\n    ".join(column_definitions)
+        + "\n)"
+    )
 
     if verbose_bool:
         print(f"Creating database table for mode: {mode}")
         print(f"Database file: {filename}")
         print(f"Table name: {tablename}")
-        print(f"Using SQL statement: {create_statement[:100]}...")  # Show first 100 chars
+        print(
+            f"Using SQL statement: {create_statement[:100]}..."
+        )  # Show first 100 chars
 
     # Create SQLiteManager instance and create the table
     try:
@@ -290,54 +370,61 @@ def create_database(mode: str, verbose_bool: Optional[bool] = False) -> bool:
     return db_was_created
 
 
-def insert_row(mode: str, game: list, event: list, verbose_bool: Optional[bool] = False) -> bool:
+def insert_row(
+    mode: str,
+    game: list,
+    event: list,
+    verbose_bool: Optional[bool] = False
+) -> bool:
     row_inserted = False
     table_definition = get_table_definition(mode, verbose_bool)
 
-    select_data = get_event_play_data(mode, event['play_id'], verbose_bool)
+    #fmt: off
+    select_data = get_event_play_data(mode, event["play_id"], verbose_bool)
     if len(select_data) == 0:
         if mode == "derp":
             insert_data = {
-                "play_id"    : event['play_id'],
-                "game_pk"    : game['game_pk'],
-                "game_date"  : game['date'],
-                "pitcher_id" : event['pitcher']['id'],
-                "batter_id"  : event['batter']['id'],
-                "event"      : event['event'],
-                "description": event['description']
+                "play_id"    : event["play_id"],
+                "game_pk"    : game["game_pk"],
+                "game_date"  : game["date"],
+                "pitcher_id" : event["pitcher"]["id"],
+                "batter_id"  : event["batter"]["id"],
+                "event"      : event["event"],
+                "description": event["description"],
             }
         elif mode == "hbp":
             insert_data = {
-                "play_id"   : event['play_id'],
-                "game_pk"   : game['game_pk'],
-                "game_date" : game['date'],
-                "pitcher_id": event['pitcher']['id'],
-                "batter_id" : event['batter']['id'],
-                "end_speed" : event['at_bat']['end_speed'],
-                "x_pos"     : event['at_bat']['plate_x'],
-                "z_pos"     : event['at_bat']['plate_z'],
+                "play_id"   : event["play_id"],
+                "game_pk"   : game["game_pk"],
+                "game_date" : game["date"],
+                "pitcher_id": event["pitcher"]["id"],
+                "batter_id" : event["batter"]["id"],
+                "end_speed" : event["at_bat"]["end_speed"],
+                "x_pos"     : event["at_bat"]["plate_x"],
+                "z_pos"     : event["at_bat"]["plate_z"],
             }
         elif mode == "triples":
             insert_data = {
-                "play_id"   : event['play_id'],
-                "game_pk"   : game['game_pk'],
-                "game_date" : game['date'],
-                "pitcher_id": event['pitcher']['id'],
-                "batter_id" : event['batter']['id'],
+                "play_id"   : event["play_id"],
+                "game_pk"   : game["game_pk"],
+                "game_date" : game["date"],
+                "pitcher_id": event["pitcher"]["id"],
+                "batter_id" : event["batter"]["id"],
             }
 
-        with SQLiteManager(table_definition['filename']) as db:
-            row_inserted = db.insert_data(table_definition['tablename'], insert_data)
+        with SQLiteManager(table_definition["filename"]) as db:
+            row_inserted = db.insert_data(table_definition["tablename"], insert_data)
+    #fmt: on
 
     return row_inserted
+
 
 def delete_row(mode: str, play_id: str, verbose_bool: Optional[bool] = False) -> bool:
     deleted = False
     table_definition = get_table_definition(mode, verbose_bool)
-    with SQLiteManager(table_definition['filename']) as db:
+    with SQLiteManager(table_definition["filename"]) as db:
         delete_data = db.update_data(
-            f"DELETE FROM {table_definition['tablename']} WHERE play_id = ?",
-            [play_id]
+            f"DELETE FROM {table_definition['tablename']} WHERE play_id = ?", [play_id]
         )
         if delete_data == 0 or delete_data == 1:
             deleted = True

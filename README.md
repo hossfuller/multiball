@@ -74,15 +74,6 @@ The `config/settings.ini` file has a section where you specify the Bluesky accou
 <!-- --------------------------------------------------------------------------- -->
 
 
-## TO-DO
-
-- [x] Figure out how to do derp plays for db population (`get_mlb_events_from_single_game()`)
-- [x] Figure out how to do triples plays for db population (`get_mlb_events_from_single_game()`)
-
-
-<!-- --------------------------------------------------------------------------- -->
-
-
 <div id='inspirations' />
 
 ## Inspirations

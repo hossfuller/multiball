@@ -4,6 +4,7 @@ import os
 import pprint
 
 import matplotlib.pyplot as plt
+
 # import matplotlib.colors as mcolors
 # import matplotlib.cm as cm
 # import matplotlib.image as mpimg
@@ -20,13 +21,15 @@ from .configurator import ConfigReader
 ## GENERAL CONFIG
 ## -------------------------------------------------------------------------- ##
 
-config = ConfigReader(bsc.verify_file_path(bsc.sanitize_path(const.DEFAULT_CONFIG_INI_FILE)))
+config = ConfigReader(
+    bsc.verify_file_path(bsc.sanitize_path(const.DEFAULT_CONFIG_INI_FILE))
+)
 
 plot_dimensions = {
-    'x_min': float(config.get("plotting", "plot_min_x")),
-    'x_max': float(config.get("plotting", "plot_max_x")),
-    'y_min': float(config.get("plotting", "plot_min_y")),
-    'y_max': float(config.get("plotting", "plot_max_y")),
+    "x_min": float(config.get("plotting", "plot_min_x")),
+    "x_max": float(config.get("plotting", "plot_max_x")),
+    "y_min": float(config.get("plotting", "plot_min_y")),
+    "y_max": float(config.get("plotting", "plot_max_y")),
 }
 
 
@@ -34,41 +37,36 @@ plot_dimensions = {
 ## PLOTTING FUNCTIONS
 ## -------------------------------------------------------------------------- ##
 
+
 def plot_hbp_batter_play_against_career(
     current_play: list,
     cumulative_data: list,
     player_info: list,
     verbose_bool: Optional[bool] = False,
-    # plot_dimensions: Optional[list] = plot_dimensions,
-    # plot_dir: Optional[str] = plot_dir
 ) -> bool:
     # Plot strike zone box (if batter info contains strike zone data)
     strikezone = [
-        (-0.708, player_info.get('strike_zone_bot', 1.5)),
-        (-0.708, player_info.get('strike_zone_top', 3.5)),
-        (0.708, player_info.get('strike_zone_top', 3.5)),
-        (0.708, player_info.get('strike_zone_bot', 1.5))
+        (-0.708, player_info.get("strike_zone_bot", 1.5)),
+        (-0.708, player_info.get("strike_zone_top", 3.5)),
+        (0.708, player_info.get("strike_zone_top", 3.5)),
+        (0.708, player_info.get("strike_zone_bot", 1.5)),
     ]
 
-    # handedness = 'righty'
-    # if player_info['hits'] == 'L':
-    #     handedness = 'lefty'
     title = f"All the times {player_info['name']} (bats {player_info['hits']}) has been hit by pitches"
 
     plot_filename = f"{current_play[0][1]}_{current_play[0][0]}_batter.png"
-    plot_fullpath = os.path.join(const.HBP_PATHS['plot_dir_fullpath'], plot_filename)
+    plot_fullpath = os.path.join(const.HBP_PATHS["plot_dir_fullpath"], plot_filename)
 
     return plot_hbp_single_play_against_cumulative_data(
         current_play,
         cumulative_data,
         strikezone,
-        player_info['height'],
-        player_info['hits'],
+        player_info["height"],
+        player_info["hits"],
         title,
         None,
         plot_fullpath,
-        # plot_dimensions,
-        verbose_bool
+        verbose_bool,
     )
 
 
@@ -76,21 +74,20 @@ def plot_hbp_pitcher_play_against_career(
     current_play: list,
     cumulative_data: list,
     player_info: list,
-    # plot_dimensions: Optional[list] = plot_dimensions,
     verbose_bool: Optional[bool] = False,
 ) -> bool:
     # Plot strike zone box (if batter info contains strike zone data)
     strikezone = [
-        (-0.708, player_info.get('strike_zone_bot', 1.5)),
-        (-0.708, player_info.get('strike_zone_top', 3.5)),
-        (0.708, player_info.get('strike_zone_top', 3.5)),
-        (0.708, player_info.get('strike_zone_bot', 1.5))
+        (-0.708, player_info.get("strike_zone_bot", 1.5)),
+        (-0.708, player_info.get("strike_zone_top", 3.5)),
+        (0.708, player_info.get("strike_zone_top", 3.5)),
+        (0.708, player_info.get("strike_zone_bot", 1.5)),
     ]
 
     title = f"All the times {player_info['name']} (throws {player_info['pitches']}) has hit batters"
 
     plot_filename = f"{current_play[0][1]}_{current_play[0][0]}_pitcher.png"
-    plot_fullpath = os.path.join(const.HBP_PATHS['plot_dir_fullpath'], plot_filename)
+    plot_fullpath = os.path.join(const.HBP_PATHS["plot_dir_fullpath"], plot_filename)
 
     return plot_hbp_single_play_against_cumulative_data(
         current_play,
@@ -101,8 +98,7 @@ def plot_hbp_pitcher_play_against_career(
         title,
         None,
         plot_fullpath,
-        # plot_dimensions,
-        verbose_bool
+        verbose_bool,
     )
 
 
@@ -111,37 +107,36 @@ def plot_hbp_current_play_against_season(
     cumulative_data: list,
     pitcher_info: list,
     batter_info: list,
-    # plot_dimensions: Optional[list] = plot_dimensions,
-    verbose_bool: Optional[bool] = False
+    verbose_bool: Optional[bool] = False,
 ) -> bool:
-    game_date        = current_play[0][2]
-    season,month,day = game_date.split('-')
+    game_date = current_play[0][2]
+    season, month, day = game_date.split("-")
 
     # Plot strike zone box (if batter info contains strike zone data)
     strikezone = [
-        (-0.708, batter_info.get('strike_zone_bot', 1.5)),
-        (-0.708, batter_info.get('strike_zone_top', 3.5)),
-        (0.708, batter_info.get('strike_zone_top', 3.5)),
-        (0.708, batter_info.get('strike_zone_bot', 1.5))
+        (-0.708, batter_info.get("strike_zone_bot", 1.5)),
+        (-0.708, batter_info.get("strike_zone_top", 3.5)),
+        (0.708, batter_info.get("strike_zone_top", 3.5)),
+        (0.708, batter_info.get("strike_zone_bot", 1.5)),
     ]
 
     title = f"{pitcher_info['name']} (throws {pitcher_info['pitches']}) vs {batter_info['name']} (bats {batter_info['hits']}), {game_date}"
     title = title + f"\nplotted with every HBP in {season}"
     plot_filename = f"{current_play[0][1]}_{current_play[0][0]}_{season}.png"
-    plot_fullpath = os.path.join(const.HBP_PATHS['plot_dir_fullpath'], plot_filename)
+    plot_fullpath = os.path.join(const.HBP_PATHS["plot_dir_fullpath"], plot_filename)
 
     return plot_hbp_single_play_against_cumulative_data(
         current_play,
         cumulative_data,
         strikezone,
-        batter_info['height'],
-        batter_info['hits'],
+        batter_info["height"],
+        batter_info["hits"],
         title,
         season,
         plot_fullpath,
-        # plot_dimensions,
-        verbose_bool
+        verbose_bool,
     )
+
 
 def plot_hbp_single_play_against_cumulative_data(
     current_play: list,
@@ -152,24 +147,23 @@ def plot_hbp_single_play_against_cumulative_data(
     title: str,
     season: str,
     plot_fullpath: str,
-    # plot_dimensions: Optional[list] = plot_dimensions,
     verbose_bool: Optional[bool] = False,
 ) -> bool:
     # Extract data for plotting with validation
     x_positions = []
     z_positions = []
-    end_speeds  = []
+    end_speeds = []
 
     null_warnings = []
     for i, item in enumerate(cumulative_data):
         # Check for None or empty values
-        if item[6] is None or item[6] == '':
+        if item[6] is None or item[6] == "":
             null_warnings.append(f"Row {i+1}: x_pos is null/empty")
             continue
-        if item[7] is None or item[7] == '':
+        if item[7] is None or item[7] == "":
             null_warnings.append(f"Row {i+1}: z_pos is null/empty")
             continue
-        if item[5] is None or item[5] == '':
+        if item[5] is None or item[5] == "":
             null_warnings.append(f"Row {i+1}: end_speed is null/empty")
             continue
 
@@ -179,7 +173,9 @@ def plot_hbp_single_play_against_cumulative_data(
 
     # Check if we have any valid data to plot
     if not x_positions or not z_positions or not end_speeds:
-        print(f"   ❌ No valid data available for plotting after filtering null/empty fields.")
+        print(
+            f"   ❌ No valid data available for plotting after filtering null/empty fields."
+        )
         return False
 
     # Create figure and axis
@@ -190,41 +186,55 @@ def plot_hbp_single_play_against_cumulative_data(
     # Convert inches to feet for consistency with other measurements
     home_plate_width = 1.4167  # 17 inches in feet
     rectangle_height = 0.7083  # 8.5 inches in feet
-    triangle_height = np.sqrt(1.0**2 - (home_plate_width/2)**2)  # 12" sides using Pythagoras
+    triangle_height = np.sqrt(
+        1.0**2 - (home_plate_width / 2) ** 2
+    )  # 12" sides using Pythagoras
 
     # Home plate corners (centered at x=0, top edge at z=0)
     # Top rectangle corners (17" wide, 8.5" tall)
-    top_left = (-home_plate_width/2, 0)
-    top_right = (home_plate_width/2, 0)
-    bottom_right_rect = (home_plate_width/2, -rectangle_height)
-    bottom_left_rect = (-home_plate_width/2, -rectangle_height)
+    top_left = (-home_plate_width / 2, 0)
+    top_right = (home_plate_width / 2, 0)
+    bottom_right_rect = (home_plate_width / 2, -rectangle_height)
+    bottom_left_rect = (-home_plate_width / 2, -rectangle_height)
 
     # Triangle point (12" sides from rectangle base)
     point = (0, -rectangle_height - triangle_height)
 
-    home_plate_corners = [top_left, top_right, bottom_right_rect, point, bottom_left_rect]
+    home_plate_corners = [
+        top_left,
+        top_right,
+        bottom_right_rect,
+        point,
+        bottom_left_rect,
+    ]
 
     # Create home plate polygon (white, no label as requested)
     home_plate = plt.Polygon(
         home_plate_corners,
         closed=True,
         fill=True,
-        facecolor='white',
-        edgecolor='black',
+        facecolor="white",
+        edgecolor="black",
         linewidth=2.0,
-        zorder=2
+        zorder=2,
     )  # Draw above dirt but below data points
     ax.add_patch(home_plate)
 
     # Add horizontal line at z=0 (ground level)
-    ax.axhline(y=0, color='black', linewidth=1.0, alpha=0.8, zorder=3)
+    ax.axhline(y=0, color="black", linewidth=1.0, alpha=0.8, zorder=3)
 
     # Add explanatory label for area below z=0
-    ax.text(0, -2,
+    ax.text(
+        0,
+        -2,
         "Anything in this area bounced in\nthe dirt before reaching home plate.",
-        ha='center', va='center',
-        fontsize=10, fontweight='normal',
-        bbox=dict(facecolor='white', alpha=0.8, edgecolor='black', boxstyle='round,pad=0.5')
+        ha="center",
+        va="center",
+        fontsize=10,
+        fontweight="normal",
+        bbox=dict(
+            facecolor="white", alpha=0.8, edgecolor="black", boxstyle="round,pad=0.5"
+        ),
     )
 
     # Create strike zone box with no fill (outline only)
@@ -232,9 +242,9 @@ def plot_hbp_single_play_against_cumulative_data(
         strike_zone_corners,
         closed=True,
         fill=False,  # No fill as requested
-        edgecolor='black',
+        edgecolor="black",
         linewidth=1.0,
-        zorder=1
+        zorder=1,
     )  # Draw underneath scatter points
     ax.add_patch(strike_zone_box)
 
@@ -272,25 +282,29 @@ def plot_hbp_single_play_against_cumulative_data(
         c=colors,
         s=50,
         alpha=0.7,
-        edgecolors='black',
-        linewidths=0.5
+        edgecolors="black",
+        linewidths=0.5,
     )
 
     # Add colorbar with adjusted size and positioning
     sm = plt.cm.ScalarMappable(
-        cmap=plt.cm.jet,
-        norm=plt.Normalize(vmin=min(end_speeds), vmax=max(end_speeds))
+        cmap=plt.cm.jet, norm=plt.Normalize(vmin=min(end_speeds), vmax=max(end_speeds))
     )
     sm.set_array([])
     cbar = plt.colorbar(sm, ax=ax, fraction=0.046, pad=0.04)
-    cbar.set_label('Pitch Speed (mph)', rotation=270, labelpad=10)
+    cbar.set_label("Pitch Speed (mph)", rotation=270, labelpad=10)
 
     # Highlight current play if it's in the season data
     try:
         # Validate current play data
-        if (current_play[0][6] is None or current_play[0][6] == '' or
-            current_play[0][7] is None or current_play[0][7] == '' or
-            current_play[0][5] is None or current_play[0][5] == ''):
+        if (
+            current_play[0][6] is None
+            or current_play[0][6] == ""
+            or current_play[0][7] is None
+            or current_play[0][7] == ""
+            or current_play[0][5] is None
+            or current_play[0][5] == ""
+        ):
             print(f"   ⚠️  Current play has null/empty fields, skipping highlight")
             current_in_season = False
         else:
@@ -307,9 +321,9 @@ def plot_hbp_single_play_against_cumulative_data(
             if item[6] is None or item[7] is None or item[5] is None:
                 return False
             return (
-                abs(float(item[6]) - current_x) < 0.01 and
-                abs(float(item[7]) - current_z) < 0.01 and
-                abs(float(item[5]) - current_speed) < 0.01
+                abs(float(item[6]) - current_x) < 0.01
+                and abs(float(item[7]) - current_z) < 0.01
+                and abs(float(item[5]) - current_speed) < 0.01
             )
         except (ValueError, TypeError):
             return False
@@ -343,17 +357,17 @@ def plot_hbp_single_play_against_cumulative_data(
             c=[current_color],
             s=150,  # Twice as big as regular points (50 -> 100)
             alpha=1.0,
-            edgecolors='yellow',  # Changed to thick yellow border as requested
+            edgecolors="yellow",  # Changed to thick yellow border as requested
             linewidths=3.0,  # Thick border as requested
-            marker='s',  # Square marker as requested
+            marker="s",  # Square marker as requested
         )
     else:
         return False
 
     # Add title and labels.
     ax.set_title(title, fontsize=14, pad=20)
-    ax.set_xlabel('Feet from center of home plate', fontsize=12)
-    ax.set_ylabel('Feet from ground', fontsize=12)
+    ax.set_xlabel("Feet from center of home plate", fontsize=12)
+    ax.set_ylabel("Feet from ground", fontsize=12)
 
     # Add grid and legend.
     ax.grid(True, alpha=0.3)
@@ -362,14 +376,16 @@ def plot_hbp_single_play_against_cumulative_data(
     legend_elements = []
     if current_in_season:
         legend_elements.append(
-            plt.Line2D([0], [0],
-                marker='s',
-                color='w',
+            plt.Line2D(
+                [0],
+                [0],
+                marker="s",
+                color="w",
                 label=f"Current Play, {current_play[0][5]} mph",
                 markerfacecolor=current_color,
                 markersize=10,
-                markeredgecolor='yellow',
-                markeredgewidth=3.0
+                markeredgecolor="yellow",
+                markeredgewidth=3.0,
             )
         )
 
@@ -379,33 +395,39 @@ def plot_hbp_single_play_against_cumulative_data(
     if season:
         legend_label = f"{data_point_count} HBP in {season}"
     legend_elements.append(
-        plt.Line2D([0], [0],
-            marker='o',
-            color='w',
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="w",
             label=legend_label,
-            markerfacecolor='gray',
+            markerfacecolor="gray",
             markersize=8,
-            markeredgecolor='black',
-            markeredgewidth=0.5
+            markeredgecolor="black",
+            markeredgewidth=0.5,
         )
     )
 
     # Add legend to plot with bbox_to_anchor to ensure it fits within layout.
-    ax.legend(handles=legend_elements, fontsize=10, loc='upper right', bbox_to_anchor=(1.0, 1.0))
+    ax.legend(
+        handles=legend_elements,
+        fontsize=10,
+        loc="upper right",
+        bbox_to_anchor=(1.0, 1.0),
+    )
 
     # Adjust layout with padding to accommodate batter silhouette and other decorations
     # Use tight_layout with adjusted parameters to ensure proper spacing for colorbar and legend
     plt.tight_layout(pad=1.05, rect=[0.05, 0.05, 0.95, 0.95])
 
     # Set fixed axis limits.
-    ax.set_xlim(plot_dimensions['x_min'], plot_dimensions['x_max'])
-    ax.set_ylim(plot_dimensions['y_min'], plot_dimensions['y_max'])
+    ax.set_xlim(plot_dimensions["x_min"], plot_dimensions["x_max"])
+    ax.set_ylim(plot_dimensions["y_min"], plot_dimensions["y_max"])
 
     # Save the plot
-    plt.savefig(plot_fullpath, bbox_inches='tight')
+    plt.savefig(plot_fullpath, bbox_inches="tight")
     print(f"   🖼️  {plot_fullpath}")
 
     plt.close(fig)
 
     return True
-
