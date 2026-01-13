@@ -237,7 +237,6 @@ def download_baseball_savant_play(
     elif mode == "triples":
         video_dir = const.TRIPLES_PATHS['video_dir_fullpath']
 
-    print(f"VIDEO_DIR: {video_dir}")
     try:
         response = requests.get(page_url, timeout=10)
         response.raise_for_status()

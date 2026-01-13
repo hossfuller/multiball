@@ -203,7 +203,6 @@ def main(start_date: Optional[str] = None) -> int:
                         elif skip_video_dl:
                             pass
                         else:
-                            print("DOWNLOADING")
                             video_filename = bb.download_baseball_savant_play(mode, game['gamePk'], event['play_id'], verbose)
                             print(f"VIDEO: {video_filename}")
 

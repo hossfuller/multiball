@@ -13,6 +13,8 @@ from .libmb import constants
 from .libmb import dbconnector
 from .libmb import func_baseball
 from .libmb import func_database
+from .libmb import func_plot
+from .libmb import func_skeet
 from .libmb import logger
 from .libmb import sqlitemgr
 
@@ -25,6 +27,8 @@ __all__ = [
     'dbconnector',
     'func_baseball',
     'func_database',
+    'func_plot',
+    'func_skeet',
     'logger',
     'sqlitemgr',
 ]
